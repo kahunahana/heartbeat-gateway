@@ -1,0 +1,28 @@
+metadata:
+  id: "gateway.classify"
+  version: "1.0.0"
+  description: "Route incoming dev tool event to ACTIONABLE, DELTA, or IGNORE"
+
+template: |
+  You are routing a developer tool event to determine if an AI agent should
+  act on it now. Be conservative — only mark ACTIONABLE if there is clear
+  relevance to current work.
+
+  Current operator context (from SOUL.md):
+  {{ soul_excerpt }}
+
+  Incoming event:
+  Source: {{ source }}
+  Summary: {{ event_summary }}
+
+  Current pending agent tasks (from HEARTBEAT.md):
+  {{ current_tasks }}
+
+  Classify as exactly one of:
+  - ACTIONABLE: Directly relates to current phase/work, indicates a blocking
+    condition, CI failure on active branch, or requires response this session.
+  - DELTA: Worth noting but not urgent. Will be reviewed in next synthesis pass.
+  - IGNORE: Not relevant to current work, duplicate of existing task, or noise.
+
+  Respond with JSON only, no markdown fencing:
+  {"classification": "ACTIONABLE", "rationale": "one sentence max"}

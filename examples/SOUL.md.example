@@ -1,0 +1,26 @@
+# SOUL.md
+
+This file gives heartbeat-gateway context about what the agent is currently
+working on. The classifier reads three sections: Current Phase, Autonomy
+Boundaries, and Active Decisions.
+
+## Current Phase
+
+Phase 3: Webhook Adapter Implementation
+Goal: Implement and test Linear, GitHub, and PostHog webhook adapters.
+Active branch: feature/webhook-adapters
+Timeline: Current sprint
+
+## Autonomy Boundaries
+
+- May create files in heartbeat_gateway/ and tests/
+- May run pytest and ruff
+- May NOT push to main without explicit approval
+- May NOT modify pyproject.toml dependencies without discussion
+- Escalate to human if: CI is broken on main, a dependency has a breaking change
+
+## Active Decisions
+
+- ADR-001: Using LiteLLM as provider interface (model-agnostic)
+- ADR-002: Async background classification (return 200 immediately)
+- ADR-003: HEARTBEAT.md as the only persistent state (no database)

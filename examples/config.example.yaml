@@ -1,0 +1,22 @@
+workspace_path: ~/workspace
+soul_md_path: ~/workspace/SOUL.md
+llm_model: claude-haiku-4-5-20251001
+heartbeat_max_active_tasks: 20
+
+watch:
+  linear:
+    project_ids: []       # empty = watch all
+    assignee_filter: any  # "self" | "any"
+    secret: ""            # webhook signing secret
+
+  github:
+    repos: []             # empty = watch all, format: "owner/repo"
+    ci_workflows: []      # empty = watch all
+    branches:
+      - main
+    secret: ""
+
+  posthog:
+    project_id: ""
+    insight_ids: []       # empty = watch all
+    secret: ""

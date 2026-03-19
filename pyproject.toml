@@ -1,0 +1,46 @@
+[project]
+name = "heartbeat-gateway"
+version = "0.1.0"
+description = "Event-driven HEARTBEAT.md writer for OpenClaw and VikingBot agents"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+homepage = "https://github.com/kahunahana/heartbeat-gateway"
+keywords = ["agent", "webhook", "heartbeat", "openviking", "openclaw", "llm"]
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "litellm>=1.50.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "loguru>=0.7.0",
+    "httpx>=0.28.0",
+    "pyyaml>=6.0.0",
+    "python-multipart>=0.0.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/kahunahana/heartbeat-gateway"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-httpx>=0.30.0",
+    "ruff>=0.8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
