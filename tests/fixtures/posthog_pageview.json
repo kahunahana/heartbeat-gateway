@@ -1,0 +1,13 @@
+{
+  "event": "$pageview",
+  "properties": {
+    "$current_url": "https://example.com/dashboard",
+    "$browser": "Chrome",
+    "$os": "Windows",
+    "$screen_height": 1080,
+    "$screen_width": 1920,
+    "distinct_id": "user-abc-123"
+  },
+  "timestamp": "2024-01-15T14:00:00.000Z",
+  "project_id": "proj-001"
+}

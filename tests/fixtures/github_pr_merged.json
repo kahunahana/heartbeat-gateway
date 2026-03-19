@@ -1,0 +1,32 @@
+{
+  "action": "closed",
+  "number": 15,
+  "pull_request": {
+    "id": 987654321,
+    "number": 15,
+    "title": "feat: add webhook adapter for Linear",
+    "state": "closed",
+    "merged": true,
+    "merged_at": "2024-01-15T12:00:00Z",
+    "updated_at": "2024-01-15T12:00:00Z",
+    "html_url": "https://github.com/kahunahana/heartbeat-gateway/pull/15",
+    "head": {
+      "ref": "feature/linear-adapter",
+      "sha": "abc123def456789012345678901234567890abcd"
+    },
+    "base": {
+      "ref": "main"
+    },
+    "merge_commit_sha": "merged123abc456def789012345678901234567890"
+  },
+  "repository": {
+    "id": 123456,
+    "name": "heartbeat-gateway",
+    "full_name": "kahunahana/heartbeat-gateway",
+    "private": false
+  },
+  "sender": {
+    "login": "kahunahana",
+    "type": "User"
+  }
+}

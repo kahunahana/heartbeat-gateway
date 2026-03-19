@@ -1,0 +1,28 @@
+{
+  "action": "completed",
+  "check_run": {
+    "id": 1234567890,
+    "name": "CI / test",
+    "head_sha": "abc123def456789012345678901234567890abcd",
+    "status": "completed",
+    "conclusion": "failure",
+    "started_at": "2024-01-15T10:00:00Z",
+    "completed_at": "2024-01-15T10:05:00Z",
+    "html_url": "https://github.com/kahunahana/heartbeat-gateway/actions/runs/1234567890",
+    "check_suite": {
+      "id": 9876543210,
+      "head_branch": "main",
+      "head_sha": "abc123def456789012345678901234567890abcd"
+    }
+  },
+  "repository": {
+    "id": 123456,
+    "name": "heartbeat-gateway",
+    "full_name": "kahunahana/heartbeat-gateway",
+    "private": false
+  },
+  "sender": {
+    "login": "github-actions[bot]",
+    "type": "Bot"
+  }
+}

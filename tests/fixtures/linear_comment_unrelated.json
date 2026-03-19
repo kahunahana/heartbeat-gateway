@@ -1,0 +1,25 @@
+{
+  "action": "create",
+  "type": "Comment",
+  "createdAt": "2024-01-15T11:00:00.000Z",
+  "organizationId": "org-001",
+  "data": {
+    "id": "comment-001",
+    "createdAt": "2024-01-15T11:00:00.000Z",
+    "updatedAt": "2024-01-15T11:00:00.000Z",
+    "body": "This is blocked on external API changes, waiting on vendor.",
+    "issueId": "issue-001",
+    "userId": "user-002",
+    "issue": {
+      "id": "issue-001",
+      "title": "Implement webhook signature verification",
+      "url": "https://linear.app/eng/issue/ENG-42/implement-webhook-signature"
+    },
+    "team": {
+      "id": "team-001",
+      "name": "Engineering",
+      "key": "ENG"
+    }
+  },
+  "updatedFrom": {}
+}

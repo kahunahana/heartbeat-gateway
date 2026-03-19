@@ -1,0 +1,15 @@
+{
+  "action": "created",
+  "starred_at": "2024-01-15T13:00:00Z",
+  "repository": {
+    "id": 123456,
+    "name": "heartbeat-gateway",
+    "full_name": "kahunahana/heartbeat-gateway",
+    "private": false,
+    "stargazers_count": 42
+  },
+  "sender": {
+    "login": "some-excited-user",
+    "type": "User"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "action": "update",
+  "type": "Issue",
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "organizationId": "org-001",
+  "data": {
+    "id": "issue-001",
+    "createdAt": "2024-01-10T08:00:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z",
+    "number": 42,
+    "title": "Implement webhook signature verification",
+    "priority": 2,
+    "priorityLabel": "Medium",
+    "identifier": "ENG-42",
+    "url": "https://linear.app/eng/issue/ENG-42/implement-webhook-signature",
+    "teamId": "team-001",
+    "projectId": "proj-001",
+    "assigneeId": "user-001",
+    "stateId": "state-blocked",
+    "state": {
+      "id": "state-blocked",
+      "color": "#ff0000",
+      "name": "Blocked",
+      "type": "started"
+    },
+    "team": {
+      "id": "team-001",
+      "name": "Engineering",
+      "key": "ENG"
+    }
+  },
+  "updatedFrom": {
+    "stateId": "state-inprogress",
+    "stateName": "In Progress",
+    "updatedAt": "2024-01-15T09:00:00.000Z"
+  }
+}
