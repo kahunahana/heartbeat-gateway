@@ -16,7 +16,7 @@ heartbeat-gateway ships three adapters. Each adapter:
 1. Open Linear → Settings → API → Webhooks → **New webhook**
 2. Set URL to your gateway's `/webhooks/linear` endpoint
 3. Select events: **Issues** and **Comments**
-4. Copy the signing secret and set `LINEAR_SECRET` in your `.env`
+4. Copy the signing secret and set `GATEWAY_WATCH__LINEAR__SECRET` in your `.env`
 
 ### Events Handled
 
@@ -34,10 +34,11 @@ All other Linear event types are dropped by the pre-filter before reaching the c
 
 ```env
 # Watch only these Linear project IDs (empty = watch all)
-# Set via config: watch.linear.project_ids = ["proj_abc123", "proj_def456"]
-```
+GATEWAY_WATCH__LINEAR__PROJECT_IDS=["proj_abc123","proj_def456"]
 
-Set `assignee_filter = "self"` to only process events for issues assigned to you.
+# Restrict to issues assigned to you
+GATEWAY_WATCH__LINEAR__ASSIGNEE_FILTER=self
+```
 
 ### Condensed Summary Examples
 
@@ -59,7 +60,7 @@ Linear: [Backend] Add retry middleware
 2. Set Payload URL to your gateway's `/webhooks/github` endpoint
 3. Content type: `application/json`
 4. Select events: **Pull requests**, **Check runs**, **Pushes**, **Issues**, **Pull request reviews**
-5. Copy the secret and set `GITHUB_SECRET` in your `.env`
+5. Copy the secret and set `GATEWAY_WATCH__GITHUB__SECRET` in your `.env`
 
 For org-wide coverage, set the webhook at the organization level instead.
 
@@ -86,10 +87,13 @@ The following GitHub events are **always dropped** (pre-filter, zero LLM calls):
 
 ```env
 # Only watch specific repos (owner/repo format). Empty = watch all.
-# Set via config: watch.github.repos = ["kahunahana/heartbeat-gateway"]
+GATEWAY_WATCH__GITHUB__REPOS=["kahunahana/heartbeat-gateway"]
 
 # Only watch specific branches for push/CI events
-# Set via config: watch.github.branches = ["main", "release"]
+GATEWAY_WATCH__GITHUB__BRANCHES=["main","release"]
+
+# Only watch specific CI workflow names
+GATEWAY_WATCH__GITHUB__CI_WORKFLOWS=["test","build"]
 ```
 
 ### Condensed Summary Examples
@@ -113,7 +117,7 @@ PostHog uses "Destinations" (formerly webhooks) for event-driven notifications.
 1. Open PostHog → Data Pipeline → Destinations → **New destination** → Webhook
 2. Set URL to your gateway's `/webhooks/posthog` endpoint
 3. Configure which events or insights trigger the destination
-4. Set a signing secret and add `POSTHOG_SECRET` to your `.env`
+4. Set a signing secret and add `GATEWAY_WATCH__POSTHOG__SECRET` to your `.env`
 
 For **insight threshold alerts**: PostHog → Insights → Alert → configure threshold → set destination URL.
 
