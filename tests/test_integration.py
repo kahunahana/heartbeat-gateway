@@ -19,9 +19,7 @@ def _load(name: str) -> dict:
 
 def _llm_mock(classification: str, rationale: str = "test rationale") -> AsyncMock:
     response = MagicMock()
-    response.choices[0].message.content = json.dumps(
-        {"classification": classification, "rationale": rationale}
-    )
+    response.choices[0].message.content = json.dumps({"classification": classification, "rationale": rationale})
     return AsyncMock(return_value=response)
 
 

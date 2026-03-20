@@ -82,3 +82,9 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
         return {"status": "ok", "version": VERSION}
 
     return app
+
+
+def main() -> None:
+    import uvicorn
+
+    uvicorn.run("heartbeat_gateway.app:create_app", factory=True, host="0.0.0.0", port=8080)

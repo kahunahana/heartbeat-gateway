@@ -205,7 +205,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-main.py
 .venv/
 
 # Internal planning / scaffolding (not for public release)
