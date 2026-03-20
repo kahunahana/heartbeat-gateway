@@ -1,0 +1,38 @@
+# SOUL.md
+#
+# This file gives heartbeat-gateway the operator context it needs to classify
+# incoming events. The classifier reads the FIRST 500 CHARACTERS, so put your
+# most important context at the top.
+#
+# Three sections drive classification accuracy:
+#
+#   ## Current Focus  — what the agent is actively working on right now
+#   ## Projects       — list of active and planned projects with status
+#   ## Watch          — explicit escalation rules and alert thresholds
+#
+# Copy this file to ~/workspace/SOUL.md (or wherever GATEWAY_SOUL_MD_PATH points)
+# and edit it to match your current work.
+
+## Current Focus
+
+Phase 5: Production hardening. Active branch: feature/retry-logic.
+Goal: wire up dead-letter queue and add retry middleware before beta launch.
+Blocking: DLQ schema needs sign-off from Alice before proceeding.
+
+## Projects
+
+- heartbeat-gateway (active — beta launch target: 2025-02-01)
+- openclaw (planning — blocked on heartbeat-gateway shipping)
+- vikingbot (paused — resume after openclaw foundation complete)
+
+## Watch
+
+Escalate immediately:
+- CI failure on `main` in heartbeat-gateway
+- Linear issue with label "blocked" assigned to me
+- PostHog error spike > 50 occurrences
+
+Do NOT escalate:
+- CI failures on feature branches (expected during development)
+- Linear comments on completed issues
+- PostHog pageview events
