@@ -126,6 +126,23 @@ async def test_missing_heartbeat_md_completes(tmp_path: Path) -> None:
     assert verdict.verdict == "IGNORE"
 
 
+async def test_response_format_json_object_is_set(tmp_path: Path) -> None:
+    """classifier must pass response_format={"type":"json_object"} to prevent markdown-fenced responses."""
+    config = make_config(tmp_path)
+    captured: list[dict] = []
+
+    async def capturing_mock(**kwargs: object) -> MagicMock:
+        captured.append(kwargs)  # type: ignore[arg-type]
+        response = MagicMock()
+        response.choices[0].message.content = json.dumps({"classification": "IGNORE", "rationale": "test"})
+        return response
+
+    with patch("litellm.acompletion", capturing_mock):
+        await Classifier(config).classify(make_event())
+
+    assert captured[0].get("response_format") == {"type": "json_object"}
+
+
 async def test_prompt_contains_payload_condensed(tmp_path: Path) -> None:
     config = make_config(tmp_path)
     event = make_event(payload_condensed="unique-payload-marker-xyz")

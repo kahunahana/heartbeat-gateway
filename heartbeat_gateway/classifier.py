@@ -76,6 +76,7 @@ class Classifier:
                 model=self._config.llm_model,
                 api_key=self._config.llm_api_key,
                 messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"},
             )
             raw = response.choices[0].message.content or ""
             data = json.loads(raw)
