@@ -149,9 +149,7 @@ async def test_markdown_fenced_json_is_parsed(tmp_path: Path) -> None:
     """Classifier must parse JSON even when the model wraps it in markdown fencing."""
     config = make_config(tmp_path)
     response = MagicMock()
-    response.choices[0].message.content = (
-        '```json\n{"classification": "IGNORE", "rationale": "fenced response"}\n```'
-    )
+    response.choices[0].message.content = '```json\n{"classification": "IGNORE", "rationale": "fenced response"}\n```'
 
     with patch("litellm.acompletion", AsyncMock(return_value=response)):
         verdict = await Classifier(config).classify(make_event())
