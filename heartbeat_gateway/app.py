@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from loguru import logger
 
 from heartbeat_gateway.adapters.github import GitHubAdapter
@@ -31,11 +31,11 @@ async def _process_webhook(request: Request, source: str):
         event = adapter.normalize(payload, headers)
 
         if event is None:
-            return {"status": "ignored"}
+            return {"status": "ignored", "reason": "unrecognized_event_type"}
 
-        should_drop, _ = state.pre_filter.should_drop(event, state.config)
+        should_drop, reason = state.pre_filter.should_drop(event, state.config)
         if should_drop:
-            return {"status": "ignored"}
+            return {"status": "ignored", "reason": reason}
 
         verdict = await state.classifier.classify(event)
 
@@ -45,7 +45,7 @@ async def _process_webhook(request: Request, source: str):
         if verdict.verdict == "DELTA":
             state.writer.write_delta(event)
             return {"status": "delta"}
-        return {"status": "ignored"}
+        return {"status": "ignored", "reason": verdict.rationale}
 
     except Exception as exc:
         logger.error("Unhandled exception in {} webhook: {}", source, exc)
@@ -76,6 +76,19 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
     @app.post("/webhooks/posthog")
     async def posthog_webhook(request: Request):
         return await _process_webhook(request, "posthog")
+
+    # Redirect singular /webhook/{source} → /webhooks/{source} (308 preserves POST method)
+    @app.post("/webhook/linear", include_in_schema=False)
+    async def redirect_linear():
+        return RedirectResponse(url="/webhooks/linear", status_code=308)
+
+    @app.post("/webhook/github", include_in_schema=False)
+    async def redirect_github():
+        return RedirectResponse(url="/webhooks/github", status_code=308)
+
+    @app.post("/webhook/posthog", include_in_schema=False)
+    async def redirect_posthog():
+        return RedirectResponse(url="/webhooks/posthog", status_code=308)
 
     @app.get("/health")
     async def health():

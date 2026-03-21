@@ -203,7 +203,7 @@ def test_posthog_webhook_invalid_signature(app, client):
 # ── Pipeline edge-case tests ──────────────────────────────────────────────────
 
 
-def test_prefilter_drop_returns_ignored(app, client, linear_event):
+def test_prefilter_drop_returns_ignored_with_reason(app, client, linear_event):
     app.state.linear_adapter.verify_signature.return_value = True
     app.state.linear_adapter.normalize.return_value = linear_event
     app.state.pre_filter.should_drop.return_value = (True, "always_drop:Issue.viewed")
@@ -211,22 +211,26 @@ def test_prefilter_drop_returns_ignored(app, client, linear_event):
     resp = client.post("/webhooks/linear", json=LINEAR_PAYLOAD)
 
     assert resp.status_code == 200
-    assert resp.json() == {"status": "ignored"}
+    body = resp.json()
+    assert body["status"] == "ignored"
+    assert body["reason"] == "always_drop:Issue.viewed"
     app.state.classifier.classify.assert_not_called()
 
 
-def test_adapter_normalize_none_returns_ignored(app, client):
+def test_adapter_normalize_none_returns_ignored_with_reason(app, client):
     app.state.linear_adapter.verify_signature.return_value = True
     app.state.linear_adapter.normalize.return_value = None
 
     resp = client.post("/webhooks/linear", json={"type": "unknown_event"})
 
     assert resp.status_code == 200
-    assert resp.json() == {"status": "ignored"}
+    body = resp.json()
+    assert body["status"] == "ignored"
+    assert body["reason"] == "unrecognized_event_type"
     app.state.classifier.classify.assert_not_called()
 
 
-def test_classifier_ignore_verdict_returns_ignored(app, client, linear_event, ignore_verdict):
+def test_classifier_ignore_verdict_returns_ignored_with_reason(app, client, linear_event, ignore_verdict):
     app.state.linear_adapter.verify_signature.return_value = True
     app.state.linear_adapter.normalize.return_value = linear_event
     app.state.classifier.classify = AsyncMock(return_value=ignore_verdict)
@@ -234,7 +238,9 @@ def test_classifier_ignore_verdict_returns_ignored(app, client, linear_event, ig
     resp = client.post("/webhooks/linear", json=LINEAR_PAYLOAD)
 
     assert resp.status_code == 200
-    assert resp.json() == {"status": "ignored"}
+    body = resp.json()
+    assert body["status"] == "ignored"
+    assert body["reason"] == "not relevant"
     app.state.writer.write_actionable.assert_not_called()
     app.state.writer.write_delta.assert_not_called()
 
@@ -247,3 +253,15 @@ def test_health_endpoint(client):
 
     assert resp.status_code == 200
     assert resp.json() == {"status": "ok", "version": "0.1.0"}
+
+
+# ── Singular path redirect tests ──────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("source", ["linear", "github", "posthog"])
+def test_singular_webhook_path_redirects(client, source):
+    """POST /webhook/{source} (singular) must 308-redirect to /webhooks/{source} (plural)."""
+    resp = client.post(f"/webhook/{source}", json={}, follow_redirects=False)
+
+    assert resp.status_code == 308
+    assert resp.headers["location"] == f"/webhooks/{source}"

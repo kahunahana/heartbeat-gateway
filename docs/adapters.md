@@ -104,6 +104,41 @@ GitHub: PR #42 'Add retry middleware' merged — kahunahana/heartbeat-gateway
 GitHub: PR #43 review approved — kahunahana/heartbeat-gateway
 ```
 
+### Manual Testing
+
+GitHub always sends `X-GitHub-Event` and `X-Hub-Signature-256` on real webhooks, but curl requests omit them by default — causing events to be silently ignored.
+
+**Step 1 — Compute the HMAC signature:**
+
+```bash
+PAYLOAD='{"action":"opened","pull_request":{"title":"Test PR","head":{"ref":"feature/test"},"base":{"ref":"main"},"number":1,"html_url":"https://github.com/owner/repo/pull/1"},"repository":{"full_name":"owner/repo"}}'
+SECRET=your-webhook-secret
+
+SIG=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$SECRET" | awk '{print "sha256="$2}')
+```
+
+**Step 2 — Send the request:**
+
+```bash
+curl -X POST http://localhost:8080/webhooks/github \
+  -H "Content-Type: application/json" \
+  -H "X-GitHub-Event: pull_request" \
+  -H "X-Hub-Signature-256: $SIG" \
+  -d "$PAYLOAD"
+```
+
+**Other common `X-GitHub-Event` values for testing:**
+
+| Event | `X-GitHub-Event` value |
+|-------|------------------------|
+| Pull request | `pull_request` |
+| CI check run | `check_run` |
+| Push | `push` |
+| Issue | `issues` |
+| PR review | `pull_request_review` |
+
+> **Tip:** If the gateway returns `{"status":"ignored","reason":"unrecognized_event_type"}`, the adapter returned `None` — check that `X-GitHub-Event` matches one of the handled events above and that the payload structure is correct.
+
 ---
 
 ## PostHog

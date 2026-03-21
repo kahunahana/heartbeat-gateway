@@ -111,6 +111,14 @@ def test_github_watched_branch_passes(pre_filter: PreFilter, tmp_path: Path) -> 
     assert not dropped
 
 
+def test_github_pr_from_feature_branch_not_dropped(pre_filter: PreFilter, tmp_path: Path) -> None:
+    """PR events must not be branch-filtered — PR branches are ephemeral and never 'main'."""
+    config = make_config(tmp_path, github=GitHubWatchConfig(branches=["main"]))
+    event = make_event("github", "pull_request", metadata={"repo": "owner/repo", "branch": "feature/my-feature"})
+    dropped, reason = pre_filter.should_drop(event, config)
+    assert not dropped, f"PR event was incorrectly dropped: {reason}"
+
+
 # --- Linear scoping ---
 
 

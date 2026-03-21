@@ -74,6 +74,8 @@ Point your Linear, GitHub, and PostHog webhooks at:
 | GitHub   | `http://localhost:8080/webhooks/github`   |
 | PostHog  | `http://localhost:8080/webhooks/posthog`  |
 
+> **Note:** The path is `/webhooks/` (plural). Using `/webhook/` (singular) will redirect automatically, but configure your webhook provider with the correct plural path to avoid the extra round-trip.
+
 Check health: `curl http://localhost:8080/health`
 
 ---

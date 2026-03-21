@@ -47,10 +47,11 @@ class PreFilter:
             if watched_repos and event_repo and event_repo not in watched_repos:
                 return True, f"repo_not_watched:{event_repo}"
 
-            # Branch scoping for push and CI events
+            # Branch scoping for push and CI events only — not PRs, whose branches are ephemeral
+            BRANCH_SCOPED_EVENTS = {"push", "ci.failure", "ci.success"}
             watched_branches = config.watch.github.branches
             event_branch = event.metadata.get("branch", "")
-            if event_branch and watched_branches and event_branch not in watched_branches:
+            if event.event_type in BRANCH_SCOPED_EVENTS and event_branch and watched_branches and event_branch not in watched_branches:
                 return True, f"branch_not_watched:{event_branch}"
 
         # 3. Linear project scoping
