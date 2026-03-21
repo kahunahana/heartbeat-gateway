@@ -51,9 +51,12 @@ class PreFilter:
             BRANCH_SCOPED_EVENTS = {"push", "ci.failure", "ci.success"}
             watched_branches = config.watch.github.branches
             event_branch = event.metadata.get("branch", "")
-            if (event.event_type in BRANCH_SCOPED_EVENTS
-                    and event_branch and watched_branches
-                    and event_branch not in watched_branches):
+            if (
+                event.event_type in BRANCH_SCOPED_EVENTS
+                and event_branch
+                and watched_branches
+                and event_branch not in watched_branches
+            ):
                 return True, f"branch_not_watched:{event_branch}"
 
         # 3. Linear project scoping
