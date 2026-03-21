@@ -71,18 +71,31 @@ class Classifier:
             current_tasks=current_tasks,
         )
 
+        api_key = self._config.llm_api_key or None
         try:
-            response = await litellm.acompletion(
-                model=self._config.llm_model,
-                api_key=self._config.llm_api_key,
-                messages=[{"role": "user", "content": prompt}],
-                response_format={"type": "json_object"},
-            )
+            try:
+                response = await litellm.acompletion(
+                    model=self._config.llm_model,
+                    api_key=api_key,
+                    messages=[{"role": "user", "content": prompt}],
+                    response_format={"type": "json_object"},
+                )
+            except litellm.UnsupportedParamsError:
+                # response_format not supported for this model/version — retry without it
+                response = await litellm.acompletion(
+                    model=self._config.llm_model,
+                    api_key=api_key,
+                    messages=[{"role": "user", "content": prompt}],
+                )
             raw = response.choices[0].message.content or ""
+            raw = raw.strip()
+            if raw.startswith("```"):
+                # Strip markdown code fencing the model may add despite prompt instructions
+                raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
             data = json.loads(raw)
             verdict_str: str = data["classification"]
         except Exception as exc:
-            logger.warning("Classifier error: {}", exc)
+            logger.error("Classifier error ({}: {})", type(exc).__name__, exc)
             return ClassifierVerdict(verdict="IGNORE", rationale="classifier error")
 
         if verdict_str not in _VALID_VERDICTS:

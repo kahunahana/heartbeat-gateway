@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import litellm
+
 from heartbeat_gateway import NormalizedEvent
 from heartbeat_gateway.classifier import Classifier
 from heartbeat_gateway.config.schema import GatewayConfig
@@ -141,6 +143,44 @@ async def test_response_format_json_object_is_set(tmp_path: Path) -> None:
         await Classifier(config).classify(make_event())
 
     assert captured[0].get("response_format") == {"type": "json_object"}
+
+
+async def test_markdown_fenced_json_is_parsed(tmp_path: Path) -> None:
+    """Classifier must parse JSON even when the model wraps it in markdown fencing."""
+    config = make_config(tmp_path)
+    response = MagicMock()
+    response.choices[0].message.content = '```json\n{"classification": "IGNORE", "rationale": "fenced response"}\n```'
+
+    with patch("litellm.acompletion", AsyncMock(return_value=response)):
+        verdict = await Classifier(config).classify(make_event())
+
+    assert verdict.verdict == "IGNORE"
+    assert verdict.rationale == "fenced response"
+
+
+async def test_unsupported_params_retries_without_response_format(tmp_path: Path) -> None:
+    """If response_format raises UnsupportedParamsError, classifier retries without it."""
+    config = make_config(tmp_path)
+    success_response = MagicMock()
+    success_response.choices[0].message.content = json.dumps({"classification": "IGNORE", "rationale": "retry ok"})
+
+    call_count = 0
+
+    async def side_effect_mock(**kwargs: object) -> MagicMock:
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise litellm.UnsupportedParamsError(
+                model="test", llm_provider="anthropic", message="response_format not supported"
+            )
+        return success_response
+
+    with patch("litellm.acompletion", side_effect_mock):
+        verdict = await Classifier(config).classify(make_event())
+
+    assert call_count == 2
+    assert verdict.verdict == "IGNORE"
+    assert verdict.rationale == "retry ok"
 
 
 async def test_prompt_contains_payload_condensed(tmp_path: Path) -> None:
