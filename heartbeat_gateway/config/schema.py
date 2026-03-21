@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings
 
 
@@ -47,7 +47,10 @@ class GatewayConfig(BaseSettings):
     workspace_path: Path = Field(default_factory=lambda: Path("~/workspace").expanduser())
     soul_md_path: Path = Field(default_factory=lambda: Path("~/workspace/SOUL.md").expanduser())
     llm_model: str = "claude-haiku-4-5-20251001"
-    llm_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")
+    llm_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("ANTHROPIC_API_KEY", "GATEWAY_LLM_API_KEY"),
+    )
     heartbeat_max_active_tasks: int = 20
     audit_log_path: Path | None = None
     watch: WatchConfig = Field(default_factory=WatchConfig)
