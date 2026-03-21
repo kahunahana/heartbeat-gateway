@@ -129,6 +129,7 @@ def test_warns_when_no_active_tasks_heading(
     heartbeat_path = config.workspace_path / "HEARTBEAT.md"
     heartbeat_path.write_text("# Heartbeat Tasks\n\nSome content without the expected heading.\n", encoding="utf-8")
     import logging
+
     with caplog.at_level(logging.WARNING):
         writer.write_actionable(sample_entry)
     assert ACTIVE_TASKS_MARKER not in heartbeat_path.read_text()

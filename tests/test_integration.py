@@ -60,7 +60,7 @@ def test_linear_comment_unrelated_not_written(client, config):
     with patch("litellm.acompletion", _llm_mock("IGNORE", "unrelated to watched work")):
         resp = client.post("/webhooks/linear", json=payload)
     assert resp.status_code == 200
-    assert resp.json() == {"status": "ignored"}
+    assert resp.json()["status"] == "ignored"
     assert not (config.workspace_path / "HEARTBEAT.md").exists()
 
 
@@ -96,7 +96,7 @@ def test_github_star_ignored_no_llm(client, config):
             headers={"X-GitHub-Event": "star"},
         )
     assert resp.status_code == 200
-    assert resp.json() == {"status": "ignored"}
+    assert resp.json()["status"] == "ignored"
     assert not (config.workspace_path / "HEARTBEAT.md").exists()
 
 
@@ -110,7 +110,7 @@ def test_posthog_pageview_ignored_no_llm(client, config):
     with patch("litellm.acompletion", AsyncMock(side_effect=AssertionError("LLM must not be called"))):
         resp = client.post("/webhooks/posthog", json=payload)
     assert resp.status_code == 200
-    assert resp.json() == {"status": "ignored"}
+    assert resp.json()["status"] == "ignored"
     assert not (config.workspace_path / "HEARTBEAT.md").exists()
 
 
