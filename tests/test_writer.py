@@ -99,6 +99,41 @@ def test_read_active_tasks_returns_section(writer: HeartbeatWriter, sample_entry
     assert "CI failed on main" in tasks
 
 
+def test_injects_marker_into_existing_file_without_marker(
+    writer: HeartbeatWriter, sample_entry: HeartbeatEntry, config: GatewayConfig
+) -> None:
+    heartbeat_path = config.workspace_path / "HEARTBEAT.md"
+    heartbeat_path.write_text("# Heartbeat Tasks\n\n## Active Tasks\n\n## Completed\n", encoding="utf-8")
+    writer.write_actionable(sample_entry)
+    content = heartbeat_path.read_text()
+    assert ACTIVE_TASKS_MARKER in content
+    marker_pos = content.find(ACTIVE_TASKS_MARKER)
+    heading_pos = content.find("## Active Tasks")
+    assert heading_pos < marker_pos
+
+
+def test_inject_marker_is_idempotent(
+    writer: HeartbeatWriter, sample_entry: HeartbeatEntry, config: GatewayConfig
+) -> None:
+    heartbeat_path = config.workspace_path / "HEARTBEAT.md"
+    heartbeat_path.write_text("# Heartbeat Tasks\n\n## Active Tasks\n\n## Completed\n", encoding="utf-8")
+    writer.write_actionable(sample_entry)
+    writer.write_actionable(sample_entry)
+    content = heartbeat_path.read_text()
+    assert content.count(ACTIVE_TASKS_MARKER) == 1
+
+
+def test_warns_when_no_active_tasks_heading(
+    writer: HeartbeatWriter, sample_entry: HeartbeatEntry, config: GatewayConfig, caplog: pytest.LogCaptureFixture
+) -> None:
+    heartbeat_path = config.workspace_path / "HEARTBEAT.md"
+    heartbeat_path.write_text("# Heartbeat Tasks\n\nSome content without the expected heading.\n", encoding="utf-8")
+    import logging
+    with caplog.at_level(logging.WARNING):
+        writer.write_actionable(sample_entry)
+    assert ACTIVE_TASKS_MARKER not in heartbeat_path.read_text()
+
+
 def test_config_loads_from_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-api-key-from-env")
     config = GatewayConfig(workspace_path=tmp_path, soul_md_path=tmp_path / "SOUL.md")

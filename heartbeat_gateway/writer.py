@@ -89,6 +89,25 @@ class HeartbeatWriter:
         self._heartbeat_path.parent.mkdir(parents=True, exist_ok=True)
         if not self._heartbeat_path.exists():
             self._heartbeat_path.write_text(HEARTBEAT_TEMPLATE, encoding="utf-8")
+            return
+
+        content = self._heartbeat_path.read_text(encoding="utf-8")
+        if ACTIVE_TASKS_MARKER in content:
+            return
+
+        heading = "## Active Tasks"
+        heading_pos = content.find(heading)
+        if heading_pos == -1:
+            logger.warning(
+                "HEARTBEAT.md exists but has no '## Active Tasks' heading — "
+                "add '## Active Tasks' to enable automatic task injection"
+            )
+            return
+
+        insert_pos = heading_pos + len(heading)
+        content = content[:insert_pos] + f"\n\n{ACTIVE_TASKS_MARKER}" + content[insert_pos:]
+        self._heartbeat_path.write_text(content, encoding="utf-8")
+        logger.info("Injected write marker into existing HEARTBEAT.md")
 
     def _is_duplicate(self, entry: HeartbeatEntry, content: str) -> bool:
         """Check if an identical entry was written within the dedup window."""
