@@ -82,6 +82,23 @@ class HeartbeatWriter:
         with self._audit_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record) + "\n")
 
+    def write_failed(self, event: NormalizedEvent, reason: str) -> None:
+        """Record an event that failed processing so it can be identified for replay."""
+        record = {
+            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+            "source": event.source,
+            "event_type": event.event_type,
+            "classification": "FAILED",
+            "rationale": reason,
+            "condensed": event.payload_condensed,
+            "status": "failed",
+        }
+        with self._audit_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record) + "\n")
+        logger.warning(
+            f"Recorded failed event for replay: {event.source}/{event.event_type} — {reason}"
+        )
+
     def read_active_tasks(self) -> str:
         if not self._heartbeat_path.exists():
             return ""

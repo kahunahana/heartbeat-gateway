@@ -74,3 +74,38 @@ def test_body_at_limit_is_not_rejected_by_size(tmp_path: Path):
         headers={"Content-Type": "application/json"},
     )
     assert response.status_code != 413
+
+
+import json as _json
+from unittest.mock import AsyncMock
+
+
+def test_classifier_failure_writes_failed_audit_record(tmp_path):
+    """When classifier raises, a failed record must appear in audit.log."""
+    config = GatewayConfig(workspace_path=tmp_path)
+    app = create_app(config)
+
+    app.state.classifier.classify = AsyncMock(side_effect=RuntimeError("LLM down"))
+    app.state.github_adapter.verify_signature = lambda body, headers: True
+
+    client = TestClient(app, raise_server_exceptions=False)
+    payload = _json.dumps({
+        "action": "opened",
+        "pull_request": {
+            "title": "test PR",
+            "html_url": "https://github.com/x/y/pull/1",
+            "number": 1,
+        }
+    })
+    response = client.post(
+        "/webhooks/github",
+        content=payload,
+        headers={"X-GitHub-Event": "pull_request", "Content-Type": "application/json"},
+    )
+
+    assert response.status_code == 500
+    audit_path = tmp_path / "audit.log"
+    assert audit_path.exists(), "audit.log must exist after failed processing"
+    records = [_json.loads(line) for line in audit_path.read_text().splitlines() if line.strip()]
+    failed = [r for r in records if r.get("status") == "failed"]
+    assert len(failed) >= 1, f"Expected failed record, got: {records}"

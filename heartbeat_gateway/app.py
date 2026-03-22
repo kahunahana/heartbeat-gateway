@@ -21,14 +21,17 @@ MAX_BODY_BYTES = 10 * 1024  # 10 KB
 
 async def _process_webhook(request: Request, source: str):
     body = await request.body()
+
     if len(body) > MAX_BODY_BYTES:
         return JSONResponse(
             {"status": "error", "reason": "payload_too_large"},
             status_code=413,
         )
+
     headers = dict(request.headers)
     state = request.app.state
     adapter = getattr(state, f"{source}_adapter")
+    event = None  # tracked for failed-event logging
 
     try:
         if not adapter.verify_signature(body, headers):
@@ -59,6 +62,11 @@ async def _process_webhook(request: Request, source: str):
 
     except Exception as exc:
         logger.error("Unhandled exception in {} webhook: {}", source, exc)
+        if event is not None:
+            try:
+                state.writer.write_failed(event, reason=f"{type(exc).__name__}: {exc}")
+            except Exception:
+                pass  # never let audit logging crash the error handler
         return JSONResponse({"status": "error"}, status_code=500)
 
 

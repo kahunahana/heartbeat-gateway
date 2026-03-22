@@ -308,3 +308,32 @@ def test_read_active_tasks_respects_config_limit(tmp_path: Path) -> None:
     (tmp_path / "HEARTBEAT.md").write_text(content)
     result = writer.read_active_tasks()
     assert len(result) <= 100
+
+
+import json as _json
+
+
+def test_write_failed_records_to_audit_log(tmp_path):
+    """write_failed must write a JSONL record with status=failed to the audit log."""
+    from heartbeat_gateway import NormalizedEvent
+    from datetime import datetime, timezone
+
+    config = GatewayConfig(workspace_path=tmp_path)
+    writer = HeartbeatWriter(config)
+
+    event = NormalizedEvent(
+        source="github",
+        event_type="ci_failure",
+        payload_condensed="CI failed on main",
+        raw_payload={},
+        timestamp=datetime.now(tz=timezone.utc),
+    )
+    writer.write_failed(event, reason="LLM timeout")
+
+    audit_path = tmp_path / "audit.log"
+    assert audit_path.exists()
+    record = _json.loads(audit_path.read_text().strip())
+    assert record["status"] == "failed"
+    assert record["classification"] == "FAILED"
+    assert record["rationale"] == "LLM timeout"
+    assert record["source"] == "github"
