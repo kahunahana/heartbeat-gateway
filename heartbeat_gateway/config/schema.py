@@ -55,4 +55,5 @@ class GatewayConfig(BaseSettings):
     soul_excerpt_chars: int = Field(default=500, ge=100, le=10000)
     active_tasks_chars: int = Field(default=1200, ge=100, le=10000)
     audit_log_path: Path | None = None
+    require_signatures: bool = Field(default=False)
     watch: WatchConfig = Field(default_factory=WatchConfig)

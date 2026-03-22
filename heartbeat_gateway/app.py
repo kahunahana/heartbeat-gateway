@@ -59,6 +59,21 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
     if config is None:
         config = GatewayConfig()
 
+    if config.require_signatures:
+        missing = []
+        if not config.watch.linear.secret:
+            missing.append("linear")
+        if not config.watch.github.secret:
+            missing.append("github")
+        if not config.watch.posthog.secret:
+            missing.append("posthog")
+        if missing:
+            raise ValueError(
+                f"GATEWAY_REQUIRE_SIGNATURES=true but no secret configured for: "
+                f"{', '.join(missing)}. "
+                f"Set GATEWAY_WATCH__{{SOURCE}}__SECRET for each source."
+            )
+
     app = FastAPI()
     app.state.config = config
     app.state.pre_filter = PreFilter()
