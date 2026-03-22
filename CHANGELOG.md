@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Dedup now works for URL-less events (e.g. CI failures) using title fingerprint fallback
+- Audit log (`audit.log`) now written for every classified event (ACTIONABLE/DELTA/IGNORE)
+
+### Added
+- Integration test: PostHog insight threshold alert → ACTIONABLE
+- Integration test: CI failure duplicate dedup verification
+- Integration test: audit log written on ACTIONABLE event
+
 ## [0.1.0] - 2026-03-19
 
 ### Added
