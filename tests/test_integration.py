@@ -164,7 +164,8 @@ def test_invalid_json_returns_500(client, config):
 # PostHog adapter dispatches on payload["type"] — no event header needed.
 
 def test_posthog_threshold_alert_writes_heartbeat(client, config):
-    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", "Error rate exceeded threshold — investigate immediately")):
+    msg = "Error rate exceeded threshold — investigate immediately"
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", msg)):
         payload = json.dumps(_load("posthog_threshold_alert.json")).encode()
         resp = client.post(
             "/webhooks/posthog",
