@@ -16,9 +16,16 @@ from heartbeat_gateway.writer import HeartbeatWriter
 
 VERSION = "0.1.1"
 
+MAX_BODY_BYTES = 10 * 1024  # 10 KB
+
 
 async def _process_webhook(request: Request, source: str):
     body = await request.body()
+    if len(body) > MAX_BODY_BYTES:
+        return JSONResponse(
+            {"status": "error", "reason": "payload_too_large"},
+            status_code=413,
+        )
     headers = dict(request.headers)
     state = request.app.state
     adapter = getattr(state, f"{source}_adapter")
