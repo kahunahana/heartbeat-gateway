@@ -31,15 +31,19 @@ class HeartbeatWriter:
         self._heartbeat_path = config.workspace_path / "HEARTBEAT.md"
         self._delta_path = config.workspace_path / "DELTA.md"
         self._audit_path = config.audit_log_path or config.workspace_path / "audit.log"
-        self._lock = FileLock(str(self._heartbeat_path.resolve()) + ".lock")
+        self._lock = FileLock(str(self._heartbeat_path.resolve()) + ".lock", timeout=5)
 
     def heartbeat_file_exists(self) -> bool:
         return self._heartbeat_path.exists()
 
     def write_actionable(self, entry: HeartbeatEntry) -> None:
-        self._ensure_heartbeat_exists()
         with self._lock:
+            self._ensure_heartbeat_exists()
             content = self._heartbeat_path.read_text(encoding="utf-8")
+
+            if self._is_duplicate(entry, content):
+                logger.debug(f"Skipping duplicate entry: {entry.source} {entry.event_type}")
+                return
 
             max_tasks = self._config.heartbeat_max_active_tasks
             if max_tasks > 0 and self._count_active_tasks(content) >= max_tasks:
@@ -47,10 +51,6 @@ class HeartbeatWriter:
                     f"Active task cap ({max_tasks}) reached — dropping "
                     f"{entry.source}/{entry.event_type}: {entry.title}"
                 )
-                return
-
-            if self._is_duplicate(entry, content):
-                logger.debug(f"Skipping duplicate entry: {entry.source} {entry.event_type}")
                 return
 
             marker_pos = content.find(ACTIVE_TASKS_MARKER)
