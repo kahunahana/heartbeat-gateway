@@ -41,6 +41,14 @@ class HeartbeatWriter:
         with self._lock:
             content = self._heartbeat_path.read_text(encoding="utf-8")
 
+            max_tasks = self._config.heartbeat_max_active_tasks
+            if max_tasks > 0 and self._count_active_tasks(content) >= max_tasks:
+                logger.warning(
+                    f"Active task cap ({max_tasks}) reached — dropping "
+                    f"{entry.source}/{entry.event_type}: {entry.title}"
+                )
+                return
+
             if self._is_duplicate(entry, content):
                 logger.debug(f"Skipping duplicate entry: {entry.source} {entry.event_type}")
                 return
@@ -111,6 +119,18 @@ class HeartbeatWriter:
         content = content[:insert_pos] + f"\n\n{ACTIVE_TASKS_MARKER}" + content[insert_pos:]
         self._heartbeat_path.write_text(content, encoding="utf-8")
         logger.info("Injected write marker into existing HEARTBEAT.md")
+
+    def _count_active_tasks(self, content: str) -> int:
+        """Count task entries in the active section (between write marker and ## Completed)."""
+        marker_pos = content.find(ACTIVE_TASKS_MARKER)
+        if marker_pos == -1:
+            return 0
+        active_section = content[marker_pos + len(ACTIVE_TASKS_MARKER) :]
+        completed_pos = active_section.find("## Completed")
+        if completed_pos != -1:
+            active_section = active_section[:completed_pos]
+        # Each entry starts with "- [ ] " (HeartbeatEntry.to_markdown() uses checkbox format)
+        return active_section.count("- [ ] ")
 
     def _is_duplicate(self, entry: HeartbeatEntry, content: str) -> bool:
         """Check if an identical entry is already in the active tasks section."""

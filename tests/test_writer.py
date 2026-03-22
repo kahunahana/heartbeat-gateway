@@ -259,3 +259,36 @@ def test_concurrent_writes_via_threads(tmp_path: Path) -> None:
     content = (tmp_path / "HEARTBEAT.md").read_text()
     for i in range(10):
         assert f"run-{i:03d}" in content, f"Entry run-{i:03d} missing"
+
+
+# ---------------------------------------------------------------------------
+# Max active tasks cap enforcement tests
+# ---------------------------------------------------------------------------
+
+
+def test_max_active_tasks_enforced(tmp_path: Path) -> None:
+    """write_actionable must refuse the 4th entry when cap is 3."""
+    config = GatewayConfig(workspace_path=tmp_path, heartbeat_max_active_tasks=3)
+    writer = HeartbeatWriter(config)
+
+    for i in range(3):
+        writer.write_actionable(_make_entry(f"run-fill-{i:03d}", tmp_path))
+
+    overflow_entry = _make_entry("run-overflow", tmp_path)
+    writer.write_actionable(overflow_entry)
+
+    content = (tmp_path / "HEARTBEAT.md").read_text()
+    assert "run-overflow" not in content, "Overflow entry should have been rejected"
+
+
+def test_max_active_tasks_zero_means_unlimited(tmp_path: Path) -> None:
+    """heartbeat_max_active_tasks=0 disables the cap."""
+    config = GatewayConfig(workspace_path=tmp_path, heartbeat_max_active_tasks=0)
+    writer = HeartbeatWriter(config)
+
+    for i in range(25):
+        writer.write_actionable(_make_entry(f"run-unlimited-{i:03d}", tmp_path))
+
+    content = (tmp_path / "HEARTBEAT.md").read_text()
+    for i in range(25):
+        assert f"run-unlimited-{i:03d}" in content
