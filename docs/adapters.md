@@ -179,51 +179,61 @@ PostHog: feature flag 'new-checkout' called
 
 ## Adding a New Adapter
 
-1. **Create** `heartbeat_gateway/adapters/your_source.py` extending `WebhookAdapter`:
+Each adapter requires changes to 5 files. Work in this order:
+
+### Step 1 — Create `heartbeat_gateway/adapters/{name}.py`
+
+Must subclass `WebhookAdapter` and implement:
+- `verify_signature(payload: bytes, headers: dict) -> bool`
+  - Return `True` if no secret configured (dev-friendly default)
+  - Use `hmac.new(secret.encode(), payload, hashlib.sha256)` for HMAC verification
+- `normalize(payload: dict, headers: dict) -> NormalizedEvent | None`
+  - Return `None` for unrecognized event types (handled gracefully by server)
+  - Set `payload_condensed` to max 240 chars — this is what the LLM sees
+- `condense(payload: dict) -> str`
+  - Produce the 240-char condensed summary used in `normalize()`
+
+### Step 2 — Add WatchConfig in `heartbeat_gateway/config/schema.py`
 
 ```python
-from heartbeat_gateway import NormalizedEvent
-from heartbeat_gateway.adapters.base import WebhookAdapter
-from heartbeat_gateway.config.schema import GatewayConfig
-
-
-class YourSourceAdapter(WebhookAdapter):
-    def __init__(self, config: GatewayConfig) -> None:
-        self.config = config
-
-    def verify_signature(self, payload: bytes, headers: dict) -> bool:
-        # Return True if no secret configured (dev mode)
-        secret = self.config.watch.your_source.secret
-        if not secret:
-            return True
-        # Implement HMAC verification matching your source's scheme
-        ...
-
-    def normalize(self, payload: dict, headers: dict) -> NormalizedEvent | None:
-        # Return None for unrecognized event types
-        event_type = self._classify(payload)
-        if event_type is None:
-            return None
-        return NormalizedEvent(
-            source="your_source",
-            event_type=event_type,
-            payload_condensed=self.condense(payload),
-            raw_payload=payload,
-            timestamp=...,
-            metadata={},
-        )
-
-    def condense(self, payload: dict) -> str:
-        return f"YourSource: {payload.get('summary', '')}"[:240]
+class {Name}WatchConfig(BaseSettings):
+    model_config = {"extra": "ignore"}
+    secret: str = ""
+    # Add platform-specific scoping fields here (e.g., project_ids, repos)
 ```
 
-2. **Add** a `YourSourceWatchConfig` to `heartbeat_gateway/config/schema.py` and include it in `WatchConfig`.
+Add to `WatchConfig`:
+```python
+{name}: {Name}WatchConfig = Field(default_factory={Name}WatchConfig)
+```
 
-3. **Register** in `heartbeat_gateway/app.py`:
-   - Import the adapter
-   - Add `app.state.your_source_adapter = YourSourceAdapter(config)` in `create_app()`
-   - Add a `@app.post("/webhooks/your_source")` route
+### Step 3 — Add scoping rules in `heartbeat_gateway/pre_filter.py`
 
-4. **Add** event types to the `ALWAYS_DROP` list in `heartbeat_gateway/pre_filter.py` as needed.
+If the platform supports scoping (project IDs, repos, etc.), add a scoping check in `PreFilter.should_drop()`. Pattern: `if watched and event_value and event_value not in watched: return True, "out_of_scope"`.
 
-5. **Write tests** in `tests/test_your_source.py` following the pattern in `tests/test_server.py`.
+### Step 4 — Wire into `heartbeat_gateway/app.py`
+
+In `create_app()`:
+```python
+from heartbeat_gateway.adapters.{name} import {Name}Adapter
+app.state.{name}_adapter = {Name}Adapter(config)
+```
+
+Add route:
+```python
+@app.post("/webhooks/{name}")
+async def {name}_webhook(request: Request):
+    return await _process_webhook(request, "{name}")
+```
+
+### Step 5 — Add tests
+
+- `tests/fixtures/{name}_{event_type}.json` — real webhook payload examples
+- `tests/test_integration.py` — at minimum one ACTIONABLE and one always-drop test
+
+### Always-drop list
+
+Add platform-specific noise events to `PreFilter.ALWAYS_DROP` in `pre_filter.py`:
+```python
+"{name}": ["{high-volume-event-type}", ...]
+```
