@@ -1,0 +1,12 @@
+{
+  "type": "insight_threshold_alert",
+  "insight": {
+    "id": "insight-001",
+    "name": "Error Rate",
+    "url": "https://app.posthog.com/project/proj-001/insights/insight-001"
+  },
+  "current_value": 0.08,
+  "threshold": { "value": 0.05 },
+  "timestamp": "2024-01-15T14:00:00.000Z",
+  "project_id": "proj-001"
+}

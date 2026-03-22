@@ -158,3 +158,63 @@ def test_invalid_json_returns_500(client, config):
         )
     assert resp.status_code == 500
     assert resp.json() == {"status": "error"}
+
+
+# ── 9. PostHog insight threshold alert → ACTIONABLE ─────────────────────────
+# PostHog adapter dispatches on payload["type"] — no event header needed.
+
+def test_posthog_threshold_alert_writes_heartbeat(client, config):
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", "Error rate exceeded threshold — investigate immediately")):
+        payload = json.dumps(_load("posthog_threshold_alert.json")).encode()
+        resp = client.post(
+            "/webhooks/posthog",
+            content=payload,
+            headers={"Content-Type": "application/json"},
+        )
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "actionable"
+    content = (config.workspace_path / "HEARTBEAT.md").read_text()
+    assert "[POSTHOG:INSIGHT.THRESHOLD]" in content
+    assert "Error rate exceeded threshold" in content
+
+
+# ── 10. CI failure duplicate events → deduped ────────────────────────────────
+# github_ci_failure.json produces entry.url=None (check_run adapter ignores html_url).
+# Dedup must fall back to title fingerprint: "[GITHUB:CI.FAILURE] {title}".
+
+def test_duplicate_ci_failure_not_written_twice(client, config):
+    """CI failure has no URL — title-fingerprint dedup must prevent duplicate writes."""
+    rationale = "CI failure on main requires immediate investigation"
+    fingerprint = f"[GITHUB:CI.FAILURE] {rationale[:120]}"
+    payload = json.dumps(_load("github_ci_failure.json")).encode()
+    headers = {"Content-Type": "application/json", "X-GitHub-Event": "check_run"}
+
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", rationale)):
+        client.post("/webhooks/github", content=payload, headers=headers)
+
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", rationale)):
+        client.post("/webhooks/github", content=payload, headers=headers)
+
+    content = (config.workspace_path / "HEARTBEAT.md").read_text()
+    # Full fingerprint must appear exactly once
+    assert content.count(fingerprint) == 1
+
+
+# ── 11. Audit log written for ACTIONABLE event ───────────────────────────────
+
+def test_audit_log_written_for_actionable(client, config):
+    import json as _json
+    rationale = "Blocked issue requires agent attention"
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", rationale)):
+        payload = json.dumps(_load("linear_issue_blocked.json")).encode()
+        client.post(
+            "/webhooks/linear",
+            content=payload,
+            headers={"Content-Type": "application/json"},
+        )
+    audit_path = config.workspace_path / "audit.log"
+    assert audit_path.exists(), "audit.log was not created"
+    record = _json.loads(audit_path.read_text().strip().splitlines()[0])
+    assert record["classification"] == "ACTIONABLE"
+    assert record["source"] == "linear"
+    assert record["rationale"] == rationale
