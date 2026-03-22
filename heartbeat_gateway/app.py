@@ -14,7 +14,7 @@ from heartbeat_gateway.config.schema import GatewayConfig
 from heartbeat_gateway.pre_filter import PreFilter
 from heartbeat_gateway.writer import HeartbeatWriter
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 
 async def _process_webhook(request: Request, source: str):

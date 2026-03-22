@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-03-21
+
 ### Fixed
 - Dedup now works for URL-less events (e.g. CI failures) using title fingerprint fallback
 - Audit log (`audit.log`) now written for every classified event (ACTIONABLE/DELTA/IGNORE)
@@ -15,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integration test: PostHog insight threshold alert → ACTIONABLE
 - Integration test: CI failure duplicate dedup verification
 - Integration test: audit log written on ACTIONABLE event
+- Phase 9: MCP server with `read_heartbeat`, `read_delta`, `read_soul`, `get_gateway_status` tools
+- Adapter extensibility guide: complete 5-step checklist in `docs/adapters.md`
 
 ## [0.1.0] - 2026-03-19
 
