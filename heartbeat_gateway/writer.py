@@ -48,8 +48,7 @@ class HeartbeatWriter:
             max_tasks = self._config.heartbeat_max_active_tasks
             if max_tasks > 0 and self._count_active_tasks(content) >= max_tasks:
                 logger.warning(
-                    f"Active task cap ({max_tasks}) reached — dropping "
-                    f"{entry.source}/{entry.event_type}: {entry.title}"
+                    f"Active task cap ({max_tasks}) reached — dropping {entry.source}/{entry.event_type}: {entry.title}"
                 )
                 return
 
@@ -95,9 +94,7 @@ class HeartbeatWriter:
         }
         with self._audit_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record) + "\n")
-        logger.warning(
-            f"Recorded failed event for replay: {event.source}/{event.event_type} — {reason}"
-        )
+        logger.warning(f"Recorded failed event for replay: {event.source}/{event.event_type} — {reason}")
 
     def read_active_tasks(self) -> str:
         if not self._heartbeat_path.exists():
@@ -111,7 +108,7 @@ class HeartbeatWriter:
         if completed_pos != -1:
             active_section = active_section[:completed_pos]
         # Return up to the configured limit
-        return active_section.strip()[:self._config.active_tasks_chars]
+        return active_section.strip()[: self._config.active_tasks_chars]
 
     def _ensure_heartbeat_exists(self) -> None:
         self._heartbeat_path.parent.mkdir(parents=True, exist_ok=True)

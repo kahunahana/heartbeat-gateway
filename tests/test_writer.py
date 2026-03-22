@@ -299,13 +299,7 @@ def test_read_active_tasks_respects_config_limit(tmp_path: Path) -> None:
     """read_active_tasks must truncate at active_tasks_chars, not hard-coded 1200."""
     config = GatewayConfig(workspace_path=tmp_path, active_tasks_chars=100)
     writer = HeartbeatWriter(config)
-    content = (
-        "## Active Tasks\n"
-        + ACTIVE_TASKS_MARKER
-        + "\n"
-        + "z" * 500
-        + "\n## Completed\n"
-    )
+    content = "## Active Tasks\n" + ACTIVE_TASKS_MARKER + "\n" + "z" * 500 + "\n## Completed\n"
     (tmp_path / "HEARTBEAT.md").write_text(content)
     result = writer.read_active_tasks()
     assert len(result) <= 100

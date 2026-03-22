@@ -18,7 +18,7 @@ def read_heartbeat(workspace: Path) -> str:
     marker_pos = content.find(ACTIVE_TASKS_MARKER)
     if marker_pos == -1:
         return "No active tasks marker found in HEARTBEAT.md."
-    active = content[marker_pos + len(ACTIVE_TASKS_MARKER):]
+    active = content[marker_pos + len(ACTIVE_TASKS_MARKER) :]
     completed_pos = active.find("## Completed")
     if completed_pos != -1:
         active = active[:completed_pos]

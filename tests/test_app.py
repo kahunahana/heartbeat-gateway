@@ -87,14 +87,16 @@ def test_classifier_failure_writes_failed_audit_record(tmp_path):
     app.state.github_adapter.verify_signature = lambda body, headers: True
 
     client = TestClient(app, raise_server_exceptions=False)
-    payload = _json.dumps({
-        "action": "opened",
-        "pull_request": {
-            "title": "test PR",
-            "html_url": "https://github.com/x/y/pull/1",
-            "number": 1,
+    payload = _json.dumps(
+        {
+            "action": "opened",
+            "pull_request": {
+                "title": "test PR",
+                "html_url": "https://github.com/x/y/pull/1",
+                "number": 1,
+            },
         }
-    })
+    )
     response = client.post(
         "/webhooks/github",
         content=payload,
