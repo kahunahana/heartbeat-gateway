@@ -1,3 +1,4 @@
+import json as _json
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -139,3 +140,191 @@ def test_config_loads_from_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-api-key-from-env")
     config = GatewayConfig(workspace_path=tmp_path, soul_md_path=tmp_path / "SOUL.md")
     assert config.llm_api_key == "test-api-key-from-env"
+
+
+# ---------------------------------------------------------------------------
+# Concurrency tests
+# ---------------------------------------------------------------------------
+
+
+def _make_entry(title: str, workspace: Path) -> HeartbeatEntry:
+    return HeartbeatEntry(
+        source="github",
+        event_type="ci_failure",
+        title=title,
+        timestamp=datetime.now(tz=timezone.utc),
+        url=f"https://github.com/org/repo/actions/runs/{title}",
+        priority="high",
+    )
+
+
+def test_concurrent_writes_preserve_all_entries(tmp_path: Path) -> None:
+    """Both entries must survive sequential write_actionable calls."""
+    config = GatewayConfig(workspace_path=tmp_path)
+    writer = HeartbeatWriter(config)
+    entry_a = _make_entry("run-111", tmp_path)
+    entry_b = _make_entry("run-222", tmp_path)
+    writer.write_actionable(entry_a)
+    writer.write_actionable(entry_b)
+    content = (tmp_path / "HEARTBEAT.md").read_text()
+    assert "run-111" in content
+    assert "run-222" in content
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Demonstrates the pre-lock race condition. SlowWriter intentionally bypasses "
+        "FileLock to show that without a lock, last-write-wins silently drops an entry. "
+        "This test is expected to fail and must continue to do so."
+    ),
+)
+def test_race_condition_without_lock_drops_entry(tmp_path: Path) -> None:
+    """Forces concurrent interleaving via barrier — without FileLock, one entry is lost.
+
+    Uses a SlowWriter subclass that holds a barrier between read and write so
+    both threads read the same baseline content before either thread writes,
+    guaranteeing last-write-wins drops one entry when no lock is present.
+    Marked xfail(strict=True): it must always fail — if it ever passes the suite
+    breaks, which would mean the race was somehow eliminated in SlowWriter itself.
+    """
+    import threading
+
+    barrier = threading.Barrier(2)
+
+    class SlowWriter(HeartbeatWriter):
+        """Pauses between read and write to force the race window."""
+
+        def write_actionable(self, entry: HeartbeatEntry) -> None:  # type: ignore[override]
+            self._ensure_heartbeat_exists()
+            content = self._heartbeat_path.read_text(encoding="utf-8")
+            # Both threads reach the barrier before either writes — classic race.
+            barrier.wait(timeout=5)
+            if self._is_duplicate(entry, content):
+                return
+            marker_pos = content.find(ACTIVE_TASKS_MARKER)
+            if marker_pos == -1:
+                content += f"\n{entry.to_markdown()}\n"
+            else:
+                insert_pos = marker_pos + len(ACTIVE_TASKS_MARKER)
+                content = content[:insert_pos] + f"\n{entry.to_markdown()}" + content[insert_pos:]
+            self._heartbeat_path.write_text(content, encoding="utf-8")
+
+    config = GatewayConfig(workspace_path=tmp_path)
+    writer = SlowWriter(config)
+
+    errors = []
+
+    def write(entry):
+        try:
+            writer.write_actionable(entry)
+        except Exception as e:
+            errors.append(f"err: {e}")
+
+    entry_a = _make_entry("race-aaa", tmp_path)
+    entry_b = _make_entry("race-bbb", tmp_path)
+    t1 = threading.Thread(target=write, args=(entry_a,))
+    t2 = threading.Thread(target=write, args=(entry_b,))
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+
+    assert not errors, f"Thread errors: {errors}"
+    content = writer._heartbeat_path.read_text()
+    assert "race-aaa" in content
+    assert "race-bbb" in content
+
+
+def test_concurrent_writes_via_threads(tmp_path: Path) -> None:
+    """10 threads writing simultaneously — all entries must appear."""
+    import threading
+
+    config = GatewayConfig(workspace_path=tmp_path)
+    writer = HeartbeatWriter(config)
+    errors = []
+
+    def write(i):
+        try:
+            writer.write_actionable(_make_entry(f"run-{i:03d}", tmp_path))
+        except Exception as e:
+            errors.append(e)
+
+    threads = [threading.Thread(target=write, args=(i,)) for i in range(10)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert not errors, f"Write errors: {errors}"
+    content = (tmp_path / "HEARTBEAT.md").read_text()
+    for i in range(10):
+        assert f"run-{i:03d}" in content, f"Entry run-{i:03d} missing"
+
+
+# ---------------------------------------------------------------------------
+# Max active tasks cap enforcement tests
+# ---------------------------------------------------------------------------
+
+
+def test_max_active_tasks_enforced(tmp_path: Path) -> None:
+    """write_actionable must refuse the 4th entry when cap is 3."""
+    config = GatewayConfig(workspace_path=tmp_path, heartbeat_max_active_tasks=3)
+    writer = HeartbeatWriter(config)
+
+    for i in range(3):
+        writer.write_actionable(_make_entry(f"run-fill-{i:03d}", tmp_path))
+
+    overflow_entry = _make_entry("run-overflow", tmp_path)
+    writer.write_actionable(overflow_entry)
+
+    content = (tmp_path / "HEARTBEAT.md").read_text()
+    assert "run-overflow" not in content, "Overflow entry should have been rejected"
+
+
+def test_max_active_tasks_zero_means_unlimited(tmp_path: Path) -> None:
+    """heartbeat_max_active_tasks=0 disables the cap."""
+    config = GatewayConfig(workspace_path=tmp_path, heartbeat_max_active_tasks=0)
+    writer = HeartbeatWriter(config)
+
+    for i in range(25):
+        writer.write_actionable(_make_entry(f"run-unlimited-{i:03d}", tmp_path))
+
+    content = (tmp_path / "HEARTBEAT.md").read_text()
+    for i in range(25):
+        assert f"run-unlimited-{i:03d}" in content
+
+
+def test_read_active_tasks_respects_config_limit(tmp_path: Path) -> None:
+    """read_active_tasks must truncate at active_tasks_chars, not hard-coded 1200."""
+    config = GatewayConfig(workspace_path=tmp_path, active_tasks_chars=100)
+    writer = HeartbeatWriter(config)
+    content = "## Active Tasks\n" + ACTIVE_TASKS_MARKER + "\n" + "z" * 500 + "\n## Completed\n"
+    (tmp_path / "HEARTBEAT.md").write_text(content)
+    result = writer.read_active_tasks()
+    assert len(result) <= 100
+
+
+def test_write_failed_records_to_audit_log(tmp_path):
+    """write_failed must write a JSONL record with status=failed to the audit log."""
+    from heartbeat_gateway import NormalizedEvent
+
+    config = GatewayConfig(workspace_path=tmp_path)
+    writer = HeartbeatWriter(config)
+
+    event = NormalizedEvent(
+        source="github",
+        event_type="ci_failure",
+        payload_condensed="CI failed on main",
+        raw_payload={},
+        timestamp=datetime.now(tz=timezone.utc),
+    )
+    writer.write_failed(event, reason="LLM timeout")
+
+    audit_path = tmp_path / "audit.log"
+    assert audit_path.exists()
+    record = _json.loads(audit_path.read_text().strip())
+    assert record["status"] == "failed"
+    assert record["classification"] == "FAILED"
+    assert record["rationale"] == "LLM timeout"
+    assert record["source"] == "github"

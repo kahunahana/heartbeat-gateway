@@ -252,7 +252,7 @@ def test_health_endpoint(client):
     resp = client.get("/health")
 
     assert resp.status_code == 200
-    assert resp.json() == {"status": "ok", "version": "0.1.1"}
+    assert resp.json() == {"status": "ok", "version": "0.2.0"}
 
 
 # ── Singular path redirect tests ──────────────────────────────────────────────

@@ -14,14 +14,24 @@ from heartbeat_gateway.config.schema import GatewayConfig
 from heartbeat_gateway.pre_filter import PreFilter
 from heartbeat_gateway.writer import HeartbeatWriter
 
-VERSION = "0.1.1"
+VERSION = "0.2.0"
+
+MAX_BODY_BYTES = 10 * 1024  # 10 KB
 
 
 async def _process_webhook(request: Request, source: str):
     body = await request.body()
+
+    if len(body) > MAX_BODY_BYTES:
+        return JSONResponse(
+            {"status": "error", "reason": "payload_too_large"},
+            status_code=413,
+        )
+
     headers = dict(request.headers)
     state = request.app.state
     adapter = getattr(state, f"{source}_adapter")
+    event = None  # tracked for failed-event logging
 
     try:
         if not adapter.verify_signature(body, headers):
@@ -52,12 +62,32 @@ async def _process_webhook(request: Request, source: str):
 
     except Exception as exc:
         logger.error("Unhandled exception in {} webhook: {}", source, exc)
+        if event is not None:
+            try:
+                state.writer.write_failed(event, reason=f"{type(exc).__name__}: {exc}")
+            except Exception:
+                pass  # never let audit logging crash the error handler
         return JSONResponse({"status": "error"}, status_code=500)
 
 
 def create_app(config: GatewayConfig | None = None) -> FastAPI:
     if config is None:
         config = GatewayConfig()
+
+    if config.require_signatures:
+        missing = []
+        if not config.watch.linear.secret:
+            missing.append("linear")
+        if not config.watch.github.secret:
+            missing.append("github")
+        if not config.watch.posthog.secret:
+            missing.append("posthog")
+        if missing:
+            raise ValueError(
+                f"GATEWAY_REQUIRE_SIGNATURES=true but no secret configured for: "
+                f"{', '.join(missing)}. "
+                f"Set GATEWAY_WATCH__{{SOURCE}}__SECRET for each source."
+            )
 
     app = FastAPI()
     app.state.config = config

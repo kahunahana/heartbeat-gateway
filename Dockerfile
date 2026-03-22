@@ -12,6 +12,17 @@ RUN uv sync --frozen --no-dev
 # Copy source
 COPY heartbeat_gateway/ ./heartbeat_gateway/
 
+# Create non-root user and workspace directory
+RUN useradd -m -u 1000 agent && \
+    mkdir -p /workspace && \
+    chown -R agent:agent /workspace /app
+
+# Declare workspace as named volume
+VOLUME ["/workspace"]
+
+# Switch to non-root user
+USER agent
+
 EXPOSE 8080
 
 CMD ["uv", "run", "uvicorn", "heartbeat_gateway.app:create_app", \

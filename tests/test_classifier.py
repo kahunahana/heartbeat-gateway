@@ -200,3 +200,28 @@ async def test_prompt_contains_payload_condensed(tmp_path: Path) -> None:
     assert captured, "acompletion was not called"
     messages = captured[0]["messages"]
     assert any("unique-payload-marker-xyz" in m["content"] for m in messages)
+
+
+def test_soul_excerpt_respects_max_chars(tmp_path: Path) -> None:
+    from heartbeat_gateway.classifier import _read_soul_excerpt
+
+    soul = tmp_path / "SOUL.md"
+    soul.write_text("x" * 2000)
+    result = _read_soul_excerpt(soul, max_chars=300)
+    assert len(result) == 300
+
+
+def test_soul_excerpt_missing_file_returns_empty(tmp_path: Path) -> None:
+    from heartbeat_gateway.classifier import _read_soul_excerpt
+
+    result = _read_soul_excerpt(tmp_path / "nonexistent.md", max_chars=500)
+    assert result == ""
+
+
+def test_read_current_tasks_respects_max_chars(tmp_path: Path) -> None:
+    from heartbeat_gateway.classifier import _read_current_tasks
+
+    hb = tmp_path / "HEARTBEAT.md"
+    hb.write_text("## Active Tasks\n" + "z" * 3000 + "\n## Completed\n")
+    result = _read_current_tasks(hb, max_chars=200)
+    assert len(result) <= 200

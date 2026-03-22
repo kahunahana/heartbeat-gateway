@@ -35,14 +35,14 @@ def _render(template: str, **kwargs: str) -> str:
     return result
 
 
-def _read_soul_excerpt(path: Path) -> str:
+def _read_soul_excerpt(path: Path, max_chars: int = 500) -> str:
     try:
-        return path.read_text(encoding="utf-8")[:500]
+        return path.read_text(encoding="utf-8")[:max_chars]
     except OSError:
         return ""
 
 
-def _read_current_tasks(heartbeat_path: Path) -> str:
+def _read_current_tasks(heartbeat_path: Path, max_chars: int = 1200) -> str:
     try:
         content = heartbeat_path.read_text(encoding="utf-8")
     except OSError:
@@ -51,7 +51,7 @@ def _read_current_tasks(heartbeat_path: Path) -> str:
     if idx == -1:
         return ""
     lines = content[idx:].splitlines()
-    return "\n".join(lines[-10:])
+    return "\n".join(lines[-10:])[:max_chars]
 
 
 class Classifier:
@@ -60,8 +60,14 @@ class Classifier:
         self._template = _load_prompt_template()
 
     async def classify(self, event: NormalizedEvent) -> ClassifierVerdict:
-        soul_excerpt = _read_soul_excerpt(self._config.soul_md_path)
-        current_tasks = _read_current_tasks(self._config.workspace_path / "HEARTBEAT.md")
+        soul_excerpt = _read_soul_excerpt(
+            self._config.soul_md_path,
+            max_chars=self._config.soul_excerpt_chars,
+        )
+        current_tasks = _read_current_tasks(
+            self._config.workspace_path / "HEARTBEAT.md",
+            max_chars=self._config.active_tasks_chars,
+        )
 
         prompt = _render(
             self._template,

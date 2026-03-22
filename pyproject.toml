@@ -1,6 +1,6 @@
 [project]
 name = "heartbeat-gateway"
-version = "0.1.0"
+version = "0.2.0"
 description = "Event-driven HEARTBEAT.md writer for OpenClaw and VikingBot agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -19,6 +19,7 @@ classifiers = [
 dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
+    "filelock>=3.13",
     "litellm>=1.50.0",
     "pydantic>=2.9.0",
     "pydantic-settings>=2.6.0",

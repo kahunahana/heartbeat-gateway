@@ -163,6 +163,7 @@ def test_invalid_json_returns_500(client, config):
 # ── 9. PostHog insight threshold alert → ACTIONABLE ─────────────────────────
 # PostHog adapter dispatches on payload["type"] — no event header needed.
 
+
 def test_posthog_threshold_alert_writes_heartbeat(client, config):
     msg = "Error rate exceeded threshold — investigate immediately"
     with patch("litellm.acompletion", _llm_mock("ACTIONABLE", msg)):
@@ -182,6 +183,7 @@ def test_posthog_threshold_alert_writes_heartbeat(client, config):
 # ── 10. CI failure duplicate events → deduped ────────────────────────────────
 # github_ci_failure.json produces entry.url=None (check_run adapter ignores html_url).
 # Dedup must fall back to title fingerprint: "[GITHUB:CI.FAILURE] {title}".
+
 
 def test_duplicate_ci_failure_not_written_twice(client, config):
     """CI failure has no URL — title-fingerprint dedup must prevent duplicate writes."""
@@ -203,8 +205,10 @@ def test_duplicate_ci_failure_not_written_twice(client, config):
 
 # ── 11. Audit log written for ACTIONABLE event ───────────────────────────────
 
+
 def test_audit_log_written_for_actionable(client, config):
     import json as _json
+
     rationale = "Blocked issue requires agent attention"
     with patch("litellm.acompletion", _llm_mock("ACTIONABLE", rationale)):
         payload = json.dumps(_load("linear_issue_blocked.json")).encode()
