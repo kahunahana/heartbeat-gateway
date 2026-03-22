@@ -31,7 +31,7 @@ class HeartbeatWriter:
         self._heartbeat_path = config.workspace_path / "HEARTBEAT.md"
         self._delta_path = config.workspace_path / "DELTA.md"
         self._audit_path = config.audit_log_path or config.workspace_path / "audit.log"
-        self._lock = FileLock(str(self._heartbeat_path) + ".lock")
+        self._lock = FileLock(str(self._heartbeat_path.resolve()) + ".lock")
 
     def heartbeat_file_exists(self) -> bool:
         return self._heartbeat_path.exists()
