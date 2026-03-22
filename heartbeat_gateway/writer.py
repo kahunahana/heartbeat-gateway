@@ -110,13 +110,11 @@ class HeartbeatWriter:
         logger.info("Injected write marker into existing HEARTBEAT.md")
 
     def _is_duplicate(self, entry: HeartbeatEntry, content: str) -> bool:
-        """Check if an identical entry was written within the dedup window."""
-        if entry.url and entry.url in content:
-            # Check if the URL appears in an active (unchecked) task
-            for line in content.splitlines():
-                if entry.url in line and "- [ ]" in content[max(0, content.find(line) - 100) : content.find(line)]:
-                    return True
-            # Simple presence check — if URL is already there, it's a dup
-            if f"→ {entry.url}" in content:
-                return True
-        return False
+        """Check if an identical entry is already in the active tasks section."""
+        # URL-based dedup — most reliable when a URL is present
+        if entry.url and f"→ {entry.url}" in content:
+            return True
+        # Title fingerprint dedup — covers URL-less events (e.g. CI failures)
+        # Matches the format produced by HeartbeatEntry.to_markdown(): [SOURCE:TYPE] title
+        fingerprint = f"[{entry.source.upper()}:{entry.event_type.upper()}] {entry.title}"
+        return fingerprint in content
