@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json as _json
 from pathlib import Path
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -74,10 +76,6 @@ def test_body_at_limit_is_not_rejected_by_size(tmp_path: Path):
         headers={"Content-Type": "application/json"},
     )
     assert response.status_code != 413
-
-
-import json as _json
-from unittest.mock import AsyncMock
 
 
 def test_classifier_failure_writes_failed_audit_record(tmp_path):

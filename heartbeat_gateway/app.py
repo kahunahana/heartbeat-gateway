@@ -14,7 +14,7 @@ from heartbeat_gateway.config.schema import GatewayConfig
 from heartbeat_gateway.pre_filter import PreFilter
 from heartbeat_gateway.writer import HeartbeatWriter
 
-VERSION = "0.1.1"
+VERSION = "0.2.0"
 
 MAX_BODY_BYTES = 10 * 1024  # 10 KB
 

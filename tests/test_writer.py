@@ -1,3 +1,4 @@
+import json as _json
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -310,13 +311,9 @@ def test_read_active_tasks_respects_config_limit(tmp_path: Path) -> None:
     assert len(result) <= 100
 
 
-import json as _json
-
-
 def test_write_failed_records_to_audit_log(tmp_path):
     """write_failed must write a JSONL record with status=failed to the audit log."""
     from heartbeat_gateway import NormalizedEvent
-    from datetime import datetime, timezone
 
     config = GatewayConfig(workspace_path=tmp_path)
     writer = HeartbeatWriter(config)

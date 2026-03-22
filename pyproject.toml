@@ -1,6 +1,6 @@
 [project]
 name = "heartbeat-gateway"
-version = "0.1.0"
+version = "0.2.0"
 description = "Event-driven HEARTBEAT.md writer for OpenClaw and VikingBot agents"
 readme = "README.md"
 requires-python = ">=3.11"
