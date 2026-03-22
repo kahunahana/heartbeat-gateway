@@ -41,10 +41,13 @@ async def _process_webhook(request: Request, source: str):
 
         if verdict.verdict == "ACTIONABLE":
             state.writer.write_actionable(verdict.entry)
+            state.writer.write_audit(event, "ACTIONABLE", verdict.rationale)
             return {"status": "actionable"}
         if verdict.verdict == "DELTA":
             state.writer.write_delta(event)
+            state.writer.write_audit(event, "DELTA", verdict.rationale)
             return {"status": "delta"}
+        state.writer.write_audit(event, "IGNORE", verdict.rationale)
         return {"status": "ignored", "reason": verdict.rationale}
 
     except Exception as exc:
