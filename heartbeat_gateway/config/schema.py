@@ -52,5 +52,7 @@ class GatewayConfig(BaseSettings):
         validation_alias=AliasChoices("ANTHROPIC_API_KEY", "GATEWAY_LLM_API_KEY"),
     )
     heartbeat_max_active_tasks: int = 20
+    soul_excerpt_chars: int = Field(default=500, ge=100, le=10000)
+    active_tasks_chars: int = Field(default=1200, ge=100, le=10000)
     audit_log_path: Path | None = None
     watch: WatchConfig = Field(default_factory=WatchConfig)

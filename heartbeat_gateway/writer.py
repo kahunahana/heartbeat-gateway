@@ -93,8 +93,8 @@ class HeartbeatWriter:
         completed_pos = active_section.find("## Completed")
         if completed_pos != -1:
             active_section = active_section[:completed_pos]
-        # Return up to ~300 tokens worth (~1200 chars)
-        return active_section.strip()[:1200]
+        # Return up to the configured limit
+        return active_section.strip()[:self._config.active_tasks_chars]
 
     def _ensure_heartbeat_exists(self) -> None:
         self._heartbeat_path.parent.mkdir(parents=True, exist_ok=True)
