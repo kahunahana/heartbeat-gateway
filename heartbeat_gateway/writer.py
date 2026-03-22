@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timezone
 
+from filelock import FileLock
 from loguru import logger
 
 from heartbeat_gateway import HeartbeatEntry, NormalizedEvent
@@ -30,28 +31,30 @@ class HeartbeatWriter:
         self._heartbeat_path = config.workspace_path / "HEARTBEAT.md"
         self._delta_path = config.workspace_path / "DELTA.md"
         self._audit_path = config.audit_log_path or config.workspace_path / "audit.log"
+        self._lock = FileLock(str(self._heartbeat_path) + ".lock")
 
     def heartbeat_file_exists(self) -> bool:
         return self._heartbeat_path.exists()
 
     def write_actionable(self, entry: HeartbeatEntry) -> None:
         self._ensure_heartbeat_exists()
-        content = self._heartbeat_path.read_text(encoding="utf-8")
+        with self._lock:
+            content = self._heartbeat_path.read_text(encoding="utf-8")
 
-        if self._is_duplicate(entry, content):
-            logger.debug(f"Skipping duplicate entry: {entry.source} {entry.event_type}")
-            return
+            if self._is_duplicate(entry, content):
+                logger.debug(f"Skipping duplicate entry: {entry.source} {entry.event_type}")
+                return
 
-        marker_pos = content.find(ACTIVE_TASKS_MARKER)
-        if marker_pos == -1:
-            logger.warning("HEARTBEAT.md missing write marker — appending at end")
-            content += f"\n{entry.to_markdown()}\n"
-        else:
-            insert_pos = marker_pos + len(ACTIVE_TASKS_MARKER)
-            content = content[:insert_pos] + f"\n{entry.to_markdown()}" + content[insert_pos:]
+            marker_pos = content.find(ACTIVE_TASKS_MARKER)
+            if marker_pos == -1:
+                logger.warning("HEARTBEAT.md missing write marker — appending at end")
+                content += f"\n{entry.to_markdown()}\n"
+            else:
+                insert_pos = marker_pos + len(ACTIVE_TASKS_MARKER)
+                content = content[:insert_pos] + f"\n{entry.to_markdown()}" + content[insert_pos:]
 
-        self._heartbeat_path.write_text(content, encoding="utf-8")
-        logger.info(f"Wrote actionable task: {entry.title}")
+            self._heartbeat_path.write_text(content, encoding="utf-8")
+            logger.info(f"Wrote actionable task: {entry.title}")
 
     def write_delta(self, event: NormalizedEvent) -> None:
         timestamp = event.timestamp.isoformat()
