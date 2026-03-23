@@ -42,7 +42,7 @@ class LinearAdapter(WebhookAdapter):
             "issue_url": data.get("url"),
             "issue_id": data.get("id"),
             "project_name": team.get("name"),
-            "project_id": data.get("projectId") or data.get("teamId"),
+            "project_id": data.get("projectId") or data.get("team", {}).get("id"),
             "status_from": updated_from.get("stateName", "") if event_type == "issue.status_changed" else "",
             "status_to": state.get("name", ""),
             "assignee_id": data.get("assigneeId"),

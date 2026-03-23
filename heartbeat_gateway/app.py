@@ -89,6 +89,11 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
                 f"Set GATEWAY_WATCH__{{SOURCE}}__SECRET for each source."
             )
 
+    logger.info(
+        "Linear project_ids filter: {}",
+        config.watch.linear.project_ids or "none (watching all projects)",
+    )
+
     app = FastAPI()
     app.state.config = config
     app.state.pre_filter = PreFilter()
