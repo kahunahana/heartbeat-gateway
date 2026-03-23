@@ -80,6 +80,83 @@ class TestLinearAdapterNormalize:
         assert "Blocked" in result
 
 
+class TestLinearAdapterProjectName:
+    """PG-4: condense() and normalize() must use project name, not team name."""
+
+    @pytest.fixture
+    def project_payload(self) -> dict:
+        return {
+            "action": "update",
+            "type": "Issue",
+            "createdAt": "2024-01-15T10:00:00.000Z",
+            "data": {
+                "id": "i2",
+                "title": "Fix dedup fingerprint",
+                "url": "https://linear.app/eng/issue/HG-1",
+                "team": {"id": "team-1", "name": "RaPDS"},
+                "project": {"id": "proj-1", "name": "Heartbeat-Gateway"},
+                "state": {"name": "In Progress"},
+                "priority": 2,
+            },
+            "updatedFrom": {},
+        }
+
+    def test_condense_uses_project_name_not_team_name(self, project_payload: dict) -> None:
+        adapter = LinearAdapter(make_config())
+        result = adapter.condense(project_payload)
+        assert "Heartbeat-Gateway" in result, f"Expected project name in condensed output, got: {result}"
+        assert "RaPDS" not in result, f"Team name must not appear when project name is available, got: {result}"
+
+    def test_normalize_project_name_metadata_uses_project_not_team(self, project_payload: dict) -> None:
+        adapter = LinearAdapter(make_config())
+        event = adapter.normalize(project_payload, {})
+        assert event is not None
+        assert event.metadata["project_name"] == "Heartbeat-Gateway", (
+            f"Expected project_name='Heartbeat-Gateway', got: {event.metadata['project_name']!r}"
+        )
+
+    def test_condense_falls_back_to_team_when_project_is_null(self) -> None:
+        """project key present but null — must not raise AttributeError."""
+        adapter = LinearAdapter(make_config())
+        payload = {
+            "action": "update",
+            "type": "Issue",
+            "createdAt": "2024-01-15T10:00:00.000Z",
+            "data": {
+                "id": "i3",
+                "title": "Some issue",
+                "team": {"id": "team-1", "name": "Engineering"},
+                "project": None,
+                "state": {"name": "Todo"},
+                "priority": 0,
+            },
+            "updatedFrom": {},
+        }
+        result = adapter.condense(payload)
+        assert "Engineering" in result
+
+    def test_normalize_falls_back_to_team_when_project_is_null(self) -> None:
+        """project key present but null — metadata project_name falls back to team name."""
+        adapter = LinearAdapter(make_config())
+        payload = {
+            "action": "create",
+            "type": "Issue",
+            "createdAt": "2024-01-15T10:00:00.000Z",
+            "data": {
+                "id": "i4",
+                "title": "Some issue",
+                "team": {"id": "team-1", "name": "Engineering"},
+                "project": None,
+                "state": {"name": "Backlog"},
+                "priority": 0,
+            },
+            "updatedFrom": {},
+        }
+        event = adapter.normalize(payload, {})
+        assert event is not None
+        assert event.metadata["project_name"] == "Engineering"
+
+
 class TestLinearAdapterSignature:
     def test_valid_signature_passes(self, blocked_payload: dict) -> None:
         adapter = LinearAdapter(make_config(secret=SECRET))

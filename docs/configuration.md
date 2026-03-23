@@ -27,7 +27,7 @@ Set these as a JSON object in `GATEWAY_WATCH` or use a `.env` file (see below).
 
 | Field            | Type        | Default  | Description |
 |------------------|-------------|----------|-------------|
-| `project_ids`    | `list[str]` | `[]`     | Linear project IDs to watch. Empty list = watch all projects. |
+| `project_ids`    | `list[str]` | `[]`     | Linear project UUIDs to watch. Empty list = watch all projects. **Recommended: always set this.** Find the UUID at `linear.app/{workspace}/settings/projects` or via the GraphQL API (`{ projects { nodes { id name } } }`). Note: Linear organises issues under **Teams**, but the `projectId` in webhook payloads refers to the **Project** container — these are different. If your issues live in a Team but are not assigned to a Project, `projectId` will be empty and this filter will not apply. |
 | `assignee_filter`| `str`       | `"any"`  | `"self"` restricts to issues assigned to the configured user; `"any"` passes all. |
 | `secret`         | `str`       | `""`     | Webhook signing secret from Linear settings. Empty = signature verification disabled (dev only). |
 

@@ -41,7 +41,7 @@ class LinearAdapter(WebhookAdapter):
         metadata = {
             "issue_url": data.get("url"),
             "issue_id": data.get("id"),
-            "project_name": team.get("name"),
+            "project_name": (data.get("project", {}) or {}).get("name") or team.get("name"),
             "project_id": data.get("projectId") or data.get("team", {}).get("id"),
             "status_from": updated_from.get("stateName", "") if event_type == "issue.status_changed" else "",
             "status_to": state.get("name", ""),
@@ -78,7 +78,7 @@ class LinearAdapter(WebhookAdapter):
         action = payload.get("action", "")
         event_type_raw = payload.get("type", "")
 
-        project = data.get("team", {}).get("name", "")
+        project = (data.get("project", {}) or {}).get("name", "") or data.get("team", {}).get("name", "")
         title = data.get("title", "")
 
         if event_type_raw == "Comment":
