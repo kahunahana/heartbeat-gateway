@@ -16,7 +16,7 @@ from heartbeat_gateway.writer import HeartbeatWriter
 
 VERSION = "0.2.0"
 
-MAX_BODY_BYTES = 10 * 1024  # 10 KB
+MAX_BODY_BYTES = 512 * 1024  # 512 KB — GitHub check_run/push payloads can exceed 10 KB
 
 
 async def _process_webhook(request: Request, source: str):
