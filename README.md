@@ -1,6 +1,6 @@
 # heartbeat-gateway
 
-![Tests](https://img.shields.io/badge/tests-94%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-111%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 
@@ -68,13 +68,15 @@ uv run uvicorn heartbeat_gateway.app:create_app --factory --host 0.0.0.0 --port 
 
 Point your Linear, GitHub, and PostHog webhooks at:
 
-| Source   | URL                              |
-|----------|----------------------------------|
-| Linear   | `http://localhost:8080/webhooks/linear`   |
-| GitHub   | `http://localhost:8080/webhooks/github`   |
-| PostHog  | `http://localhost:8080/webhooks/posthog`  |
+| Source   | Local dev URL                              | Production URL (HTTPS required) |
+|----------|--------------------------------------------|---------------------------------|
+| Linear   | `http://localhost:8080/webhooks/linear`    | `https://your-host/webhooks/linear` |
+| GitHub   | `http://localhost:8080/webhooks/github`    | `https://your-host/webhooks/github` |
+| PostHog  | `http://localhost:8080/webhooks/posthog`   | `https://your-host/webhooks/posthog` |
 
 > **Note:** The path is `/webhooks/` (plural). Using `/webhook/` (singular) will redirect automatically, but configure your webhook provider with the correct plural path to avoid the extra round-trip.
+
+> **Production deployments:** Linear and PostHog require HTTPS. See [Deploying — Persistent Cloudflare Tunnel](docs/deploying.md#persistent-cloudflare-tunnel-recommended-for-vps) for the recommended setup.
 
 Check health: `curl http://localhost:8080/health`
 

@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, BaseModel, Field
 from pydantic_settings import BaseSettings
 
 
-class LinearWatchConfig(BaseSettings):
+class LinearWatchConfig(BaseModel):
     model_config = {"extra": "ignore"}
 
     project_ids: list[str] = Field(default_factory=list)
@@ -12,7 +12,7 @@ class LinearWatchConfig(BaseSettings):
     secret: str = ""
 
 
-class GitHubWatchConfig(BaseSettings):
+class GitHubWatchConfig(BaseModel):
     model_config = {"extra": "ignore"}
 
     repos: list[str] = Field(default_factory=list)
@@ -21,7 +21,7 @@ class GitHubWatchConfig(BaseSettings):
     secret: str = ""
 
 
-class PostHogWatchConfig(BaseSettings):
+class PostHogWatchConfig(BaseModel):
     model_config = {"extra": "ignore"}
 
     project_id: str = ""
@@ -29,7 +29,7 @@ class PostHogWatchConfig(BaseSettings):
     secret: str = ""
 
 
-class WatchConfig(BaseSettings):
+class WatchConfig(BaseModel):
     model_config = {"extra": "ignore"}
 
     linear: LinearWatchConfig = Field(default_factory=LinearWatchConfig)
@@ -40,6 +40,7 @@ class WatchConfig(BaseSettings):
 class GatewayConfig(BaseSettings):
     model_config = {
         "env_prefix": "GATEWAY_",
+        "env_nested_delimiter": "__",
         "extra": "ignore",
         "populate_by_name": True,
     }
