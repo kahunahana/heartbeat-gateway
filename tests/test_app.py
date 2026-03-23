@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json as _json
+import os
 from pathlib import Path
 from unittest.mock import AsyncMock
 
@@ -15,6 +16,27 @@ from heartbeat_gateway.config.schema import (
     PostHogWatchConfig,
     WatchConfig,
 )
+
+
+def test_secrets_loaded_from_environment_variables(tmp_path: Path, monkeypatch):
+    """GATEWAY_WATCH__GITHUB__SECRET (and linear/posthog) must be read from env vars.
+
+    This test guards against the BaseSettings nesting bug where nested models
+    instantiated via default_factory bypass env var loading entirely.
+    """
+    monkeypatch.setenv("GATEWAY_WATCH__GITHUB__SECRET", "gh-env-secret")
+    monkeypatch.setenv("GATEWAY_WATCH__LINEAR__SECRET", "linear-env-secret")
+    monkeypatch.setenv("GATEWAY_WATCH__POSTHOG__SECRET", "posthog-env-secret")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+
+    config = GatewayConfig(workspace_path=tmp_path)
+
+    assert config.watch.github.secret == "gh-env-secret", (
+        "GitHub secret not loaded from GATEWAY_WATCH__GITHUB__SECRET — "
+        "nested model likely instantiated via default_factory, bypassing env var loading"
+    )
+    assert config.watch.linear.secret == "linear-env-secret"
+    assert config.watch.posthog.secret == "posthog-env-secret"
 
 
 def test_require_signatures_raises_on_missing_secret(tmp_path: Path):

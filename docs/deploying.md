@@ -165,20 +165,102 @@ Railway sets `$PORT` automatically.
 
 ---
 
-## Exposing to the Public Internet (Development)
+## Persistent Cloudflare Tunnel (recommended for VPS)
 
-For local development, use a tunnel to receive webhooks:
+Linear and PostHog require HTTPS. The cleanest production solution for a VPS deployment is a named Cloudflare Tunnel — free, persistent across reboots, no domain certificate management required. If your domain is on Cloudflare you get a clean subdomain (e.g. `hooks.yourdomain.com`).
+
+### Prerequisites
+
+- A Cloudflare account
+- Your domain's nameservers pointed at Cloudflare (free plan is sufficient)
+- `cloudflared` installed on the VPS
+
+```bash
+# Install cloudflared
+curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
+  -o /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
+
+cloudflared --version
+```
+
+### Step 1 — Authenticate to Cloudflare
+
+```bash
+cloudflared tunnel login
+```
+
+This prints a URL. Open it in a browser, select your domain, and authorize. A `cert.pem` is saved to `~/.cloudflared/cert.pem` automatically once you authorize.
+
+### Step 2 — Create the named tunnel
+
+```bash
+cloudflared tunnel create heartbeat-gateway
+```
+
+Note the UUID printed — you need it in the next step. It looks like `a1b2c3d4-xxxx-xxxx-xxxx-xxxxxxxxxxxx`.
+
+### Step 3 — Write the config file
+
+```bash
+mkdir -p ~/.cloudflared
+cat > ~/.cloudflared/config.yml << 'EOF'
+tunnel: heartbeat-gateway
+credentials-file: /root/.cloudflared/<YOUR-TUNNEL-UUID>.json
+
+ingress:
+  - hostname: hooks.yourdomain.com
+    service: http://localhost:8080
+  - service: http_status:404
+EOF
+```
+
+Replace `<YOUR-TUNNEL-UUID>` with the UUID from Step 2, and `hooks.yourdomain.com` with your chosen subdomain.
+
+### Step 4 — Create the DNS record
+
+```bash
+cloudflared tunnel route dns heartbeat-gateway hooks.yourdomain.com
+```
+
+This creates the CNAME record in Cloudflare DNS automatically — no manual dashboard editing needed.
+
+### Step 5 — Install as a systemd service
+
+```bash
+cloudflared service install
+systemctl enable cloudflared
+systemctl start cloudflared
+systemctl status cloudflared
+```
+
+The tunnel now starts automatically on boot.
+
+### Step 6 — Verify
+
+```bash
+curl https://hooks.yourdomain.com/health
+# → {"status":"ok","version":"0.1.1"}
+```
+
+### Step 7 — Update webhook URLs
+
+| Source  | URL |
+|---------|-----|
+| GitHub  | `https://hooks.yourdomain.com/webhooks/github` |
+| Linear  | `https://hooks.yourdomain.com/webhooks/linear` |
+| PostHog | `https://hooks.yourdomain.com/webhooks/posthog` |
+
+### Local development (temporary tunnel)
+
+For local dev only — not suitable for production as the URL changes on every restart:
 
 ```bash
 # ngrok
 ngrok http 8080
-# → https://abc123.ngrok.io
 
-# Cloudflare Tunnel (free, persistent URL)
+# Cloudflare quick tunnel (temporary URL)
 cloudflared tunnel --url http://localhost:8080
 ```
-
-Use the tunnel URL as your webhook URL in Linear/GitHub/PostHog settings.
 
 ---
 
@@ -188,7 +270,7 @@ All deployment platforms should check:
 
 ```
 GET /health
-→ {"status": "ok", "version": "0.1.0"}
+→ {"status": "ok", "version": "0.1.1"}
 ```
 
 Configure your load balancer or platform health check to hit `/health` every 30 seconds.
