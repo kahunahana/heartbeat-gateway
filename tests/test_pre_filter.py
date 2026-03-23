@@ -136,6 +136,19 @@ def test_linear_empty_project_list_passes_all(pre_filter: PreFilter, open_config
     assert not dropped
 
 
+def test_linear_no_project_id_drops_when_filter_active(pre_filter: PreFilter, tmp_path: Path) -> None:
+    """Issues with no projectId (not assigned to a Project) must be dropped when project_ids is configured.
+
+    Linear issues that belong to a Team but are not assigned to a Project have a null projectId
+    in the webhook payload. Without this test, those events bypass the allowlist entirely.
+    """
+    config = make_config(tmp_path, linear=LinearWatchConfig(project_ids=["proj-abc"]))
+    event = make_event("linear", "issue.status_changed", metadata={"project_id": ""})
+    dropped, reason = pre_filter.should_drop(event, config)
+    assert dropped
+    assert "project_not_watched" in reason
+
+
 # --- PostHog scoping ---
 
 

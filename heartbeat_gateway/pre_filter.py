@@ -63,8 +63,8 @@ class PreFilter:
         if event.source == "linear":
             watched_projects = config.watch.linear.project_ids
             event_project = event.metadata.get("project_id", "")
-            if watched_projects and event_project and event_project not in watched_projects:
-                return True, f"project_not_watched:{event_project}"
+            if watched_projects and (not event_project or event_project not in watched_projects):
+                return True, f"project_not_watched:{event_project or 'unassigned'}"
 
         # 4. PostHog project scoping
         if event.source == "posthog":
