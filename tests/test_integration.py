@@ -182,25 +182,26 @@ def test_posthog_threshold_alert_writes_heartbeat(client, config):
 
 # ── 10. CI failure duplicate events → deduped ────────────────────────────────
 # github_ci_failure.json produces entry.url=None (check_run adapter ignores html_url).
-# Dedup must fall back to title fingerprint: "[GITHUB:CI.FAILURE] {title}".
+# Dedup falls back to payload_condensed fingerprint (deterministic, from adapter).
+# This guards against the production bug where different LLM rationale on each call
+# caused title-based fingerprints to miss duplicates.
 
 
 def test_duplicate_ci_failure_not_written_twice(client, config):
-    """CI failure has no URL — title-fingerprint dedup must prevent duplicate writes."""
-    rationale = "CI failure on main requires immediate investigation"
-    fingerprint = f"[GITHUB:CI.FAILURE] {rationale[:120]}"
+    """CI failure has no URL — payload_condensed dedup must prevent duplicate writes
+    even when the LLM generates different rationale text on each call."""
     payload = json.dumps(_load("github_ci_failure.json")).encode()
     headers = {"Content-Type": "application/json", "X-GitHub-Event": "check_run"}
 
-    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", rationale)):
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", "CI failure on main — first rationale")):
         client.post("/webhooks/github", content=payload, headers=headers)
 
-    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", rationale)):
+    # Different rationale simulates non-deterministic LLM output for the same event
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", "CI failure — completely different rationale text")):
         client.post("/webhooks/github", content=payload, headers=headers)
 
     content = (config.workspace_path / "HEARTBEAT.md").read_text()
-    # Full fingerprint must appear exactly once
-    assert content.count(fingerprint) == 1
+    assert content.count("- [ ] [GITHUB:CI.FAILURE]") == 1
 
 
 # ── 11. Audit log written for ACTIONABLE event ───────────────────────────────

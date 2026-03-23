@@ -151,7 +151,9 @@ class HeartbeatWriter:
         # URL-based dedup — most reliable when a URL is present
         if entry.url and f"→ {entry.url}" in content:
             return True
-        # Title fingerprint dedup — covers URL-less events (e.g. CI failures)
-        # Matches the format produced by HeartbeatEntry.to_markdown(): [SOURCE:TYPE] title
-        fingerprint = f"[{entry.source.upper()}:{entry.event_type.upper()}] {entry.title}"
-        return fingerprint in content
+        # payload_condensed fingerprint — deterministic (from adapter, not LLM)
+        # written as "ref:{condensed}" in the details line by to_markdown()
+        # prevents duplicates when the LLM generates different titles for the same event
+        if entry.payload_condensed:
+            return f"ref:{entry.payload_condensed}" in content
+        return False

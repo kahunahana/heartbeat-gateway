@@ -29,6 +29,7 @@ def sample_entry() -> HeartbeatEntry:
         source="github",
         event_type="ci.failure",
         title="CI failed on main - test-auth workflow",
+        payload_condensed="GitHub CI: test-auth failed on owner/repo @ abc123 (main)",
         url="https://github.com/owner/repo/actions/runs/123",
         timestamp=datetime(2026, 3, 19, 12, 0, 0, tzinfo=timezone.utc),
     )
@@ -71,6 +72,24 @@ def test_deduplicates_same_url(writer: HeartbeatWriter, sample_entry: HeartbeatE
     writer.write_actionable(sample_entry)
     content = (config.workspace_path / "HEARTBEAT.md").read_text()
     assert content.count("CI failed on main") == 1
+
+
+def test_deduplicates_same_event_different_title(
+    writer: HeartbeatWriter, sample_entry: HeartbeatEntry, config: GatewayConfig
+) -> None:
+    """Same underlying event with different LLM-generated titles must still be deduped.
+
+    This guards against the production bug where the LLM generates different rationale
+    text on each call, causing title-based fingerprints to miss the duplicate.
+    """
+    from dataclasses import replace
+
+    writer.write_actionable(sample_entry)
+    # Same payload_condensed but different LLM title — simulates non-deterministic LLM
+    different_title_entry = replace(sample_entry, title="Different LLM rationale for same event", url=None)
+    writer.write_actionable(different_title_entry)
+    content = (config.workspace_path / "HEARTBEAT.md").read_text()
+    assert content.count("- [ ] [GITHUB:CI.FAILURE]") == 1
 
 
 def test_writes_delta(writer: HeartbeatWriter, sample_event: NormalizedEvent, config: GatewayConfig) -> None:

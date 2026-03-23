@@ -119,6 +119,7 @@ class Classifier:
                 event_type=event.event_type,
                 title=rationale[:120],
                 timestamp=event.timestamp,
+                payload_condensed=event.payload_condensed,
                 url=url,
                 priority=priority,
             )
