@@ -15,7 +15,7 @@ class LinearAdapter(WebhookAdapter):
         secret = self.config.watch.linear.secret
         if not secret:
             return True
-        sig = headers.get("x-linear-signature") or headers.get("X-Linear-Signature", "")
+        sig = headers.get("linear-signature") or headers.get("x-linear-signature") or headers.get("X-Linear-Signature", "")
         expected = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
         return hmac.compare_digest(expected, sig)
 

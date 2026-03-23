@@ -85,12 +85,12 @@ class TestLinearAdapterSignature:
         adapter = LinearAdapter(make_config(secret=SECRET))
         raw = json.dumps(blocked_payload).encode()
         sig = sign(raw, SECRET)
-        assert adapter.verify_signature(raw, {"x-linear-signature": sig}) is True
+        assert adapter.verify_signature(raw, {"linear-signature": sig}) is True
 
     def test_invalid_signature_returns_false(self, blocked_payload: dict) -> None:
         adapter = LinearAdapter(make_config(secret=SECRET))
         raw = json.dumps(blocked_payload).encode()
-        assert adapter.verify_signature(raw, {"x-linear-signature": "badsig"}) is False
+        assert adapter.verify_signature(raw, {"linear-signature": "badsig"}) is False
 
     def test_no_secret_always_passes(self, blocked_payload: dict) -> None:
         adapter = LinearAdapter(make_config())
