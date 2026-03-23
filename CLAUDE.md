@@ -83,6 +83,21 @@ These are documented; do not "fix" them in the wrong layer.
 | PG-2: No `gateway doctor` command | Future phase | Pre-flight config validator |
 | PG-3: SOUL.md has no schema | Future phase | Linter/template to prevent scope-creep |
 | PG-4: `condense()` uses team name not project name | **Fixed in v0.2.0** | commit `e84290a` |
+| PG-5: MCP stdio transport unreliable over SSH | Future phase | See below |
+
+### PG-5 Detail — MCP server SSH transport
+
+`heartbeat-gateway-mcp` uses MCP's stdio transport. Running it over SSH from Claude
+Desktop fails because non-interactive SSH sessions inject noise (shell startup output,
+SSH banners) onto stdout before the Python process starts. The JSON-RPC stream parser
+receives a bare `\n` as its first message, raises a validation error, and exits.
+
+The local setup (uv run directly, no SSH) works correctly. See `docs/mcp.md`.
+
+**Fix for v0.3.0:** Rewrite using `FastMCP` with an HTTP/SSE transport, or add a
+`gateway doctor` check that validates the MCP transport before Claude Desktop connects.
+Do not attempt to fix by adding SSH flags — the root cause is stdout contamination from
+the shell/SSH layer, not the SSH connection itself.
 
 ---
 
