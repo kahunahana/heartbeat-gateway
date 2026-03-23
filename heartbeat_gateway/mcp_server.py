@@ -100,4 +100,8 @@ def main() -> None:
 
     import asyncio
 
-    asyncio.run(stdio_server(server))
+    async def run() -> None:
+        async with stdio_server() as (read_stream, write_stream):
+            await server.run(read_stream, write_stream, server.create_initialization_options())
+
+    asyncio.run(run())
