@@ -1,10 +1,12 @@
 # heartbeat-gateway
 
-![Tests](https://img.shields.io/badge/tests-111%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-134%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 
-Event gateway that classifies webhooks from **Linear**, **GitHub**, and **PostHog** against your operator's `SOUL.md` and writes actionable items to `HEARTBEAT.md` — replacing cron polling with event-driven agent triggers for [OpenClaw](https://github.com/kahunahana/openclaw) and [VikingBot](https://github.com/kahunahana/vikingbot) agents.
+**Cron polling your project tools costs ~$86/month and keeps your agents 30 minutes behind. heartbeat-gateway costs ~$4.50/month and delivers events in under 2 seconds.**
+
+It classifies webhooks from **Linear**, **GitHub**, and **PostHog** against your operator's `SOUL.md` and writes actionable items to `HEARTBEAT.md` — the task queue consumed by [OpenClaw](https://github.com/kahunahana/openclaw), [VikingBot](https://github.com/kahunahana/vikingbot), and any agent that can read a markdown file.
 
 ```
 Linear ──┐
@@ -156,11 +158,29 @@ This file is managed by heartbeat-gateway.
 
 ---
 
+## MCP Server
+
+heartbeat-gateway ships a second entry point — `heartbeat-gateway-mcp` — that exposes
+`HEARTBEAT.md`, `DELTA.md`, and `SOUL.md` as MCP tools for use in Claude Desktop,
+Cursor, or any MCP-compatible AI assistant.
+
+```bash
+GATEWAY_WORKSPACE_PATH=~/workspace \
+GATEWAY_SOUL_MD_PATH=~/workspace/SOUL.md \
+uv run heartbeat-gateway-mcp
+```
+
+See [docs/mcp.md](docs/mcp.md) for setup and Claude Desktop config.
+
+---
+
 ## Documentation
 
 - [Configuration reference](docs/configuration.md)
 - [Adapter setup (Linear, GitHub, PostHog)](docs/adapters.md)
 - [Deploying (bare-metal, Docker, Railway)](docs/deploying.md)
+- [MCP server setup](docs/mcp.md)
+- [Deep-dive: architecture, cost breakdown, and hardening story](https://medium.com/@chadk/heartbeat-gateway) *(link active after publish)*
 
 ---
 
