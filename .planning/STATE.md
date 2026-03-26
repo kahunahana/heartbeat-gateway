@@ -10,8 +10,8 @@
 
 - **Milestone:** v0.3.0
 - **Phase:** 1 of 2 — CLI Foundation + gateway doctor
-- **Plan:** 2 of 2 — COMPLETE (awaiting human verify checkpoint)
-- **Status:** Checkpoint — awaiting human verification of `gateway doctor` terminal output
+- **Plan:** 2 of 2 — COMPLETE (human verified 2026-03-25)
+- **Status:** Phase 1 complete — ready for Phase 2 (gateway init)
 
 ## Progress
 
@@ -43,5 +43,5 @@ _None captured_
 ## Session Continuity
 
 Last session: 2026-03-25 (Phase 1 Plan 02 executed — DoctorRunner 9 checks, 14 tests, cli.add_command registered)
-Stopped at: Checkpoint after Plan 02 Task 2 — awaiting human verify of `gateway doctor` terminal output
-Resume file: .planning/phases/01-cli-foundation-gateway-doctor/01-02-PLAN.md (checkpoint:human-verify)
+Stopped at: Phase 1 complete — human verified `gateway doctor` terminal output 2026-03-25
+Resume file: Phase 2 (gateway init) — 02-XX-PLAN.md not yet created
