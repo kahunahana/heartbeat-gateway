@@ -15,3 +15,8 @@ def serve() -> None:
     import uvicorn
 
     uvicorn.run("heartbeat_gateway.app:create_app", factory=True, host="0.0.0.0", port=8080)
+
+
+from heartbeat_gateway.commands.doctor import doctor  # noqa: E402
+
+cli.add_command(doctor)
