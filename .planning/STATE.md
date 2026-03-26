@@ -1,3 +1,17 @@
+---
+gsd_state_version: 1.0
+milestone: v0.3
+milestone_name: milestone
+status: planning
+stopped_at: Phase 1 complete — human verified `gateway doctor` terminal output 2026-03-25
+last_updated: "2026-03-26T06:21:45.902Z"
+progress:
+  total_phases: 2
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
+---
+
 # STATE.md — heartbeat-gateway
 
 ## Project Reference
@@ -11,7 +25,7 @@
 - **Milestone:** v0.3.0
 - **Phase:** 1 of 2 — CLI Foundation + gateway doctor
 - **Plan:** 2 of 2 — COMPLETE (human verified 2026-03-25)
-- **Status:** Phase 1 complete — ready for Phase 2 (gateway init)
+- **Status:** Ready to plan
 
 ## Progress
 
