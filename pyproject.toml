@@ -20,7 +20,7 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
     "filelock>=3.13",
-    "litellm>=1.50.0",
+    "litellm>=1.50.0,<1.82.7",  # 1.82.7 and 1.82.8 were supply-chain compromised (BerriAI/litellm#24518); remove ceiling once a clean post-1.82.8 release is confirmed
     "pydantic>=2.9.0",
     "pydantic-settings>=2.6.0",
     "loguru>=0.7.0",
@@ -28,6 +28,10 @@ dependencies = [
     "pyyaml>=6.0.0",
     "python-multipart>=0.0.12",
     "mcp>=1.26.0",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "questionary>=2.0.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.urls]
@@ -37,7 +41,7 @@ Issues = "https://github.com/kahunahana/heartbeat-gateway/issues"
 Changelog = "https://github.com/kahunahana/heartbeat-gateway/blob/main/CHANGELOG.md"
 
 [project.scripts]
-heartbeat-gateway = "heartbeat_gateway.app:main"
+heartbeat-gateway = "heartbeat_gateway.cli:cli"
 heartbeat-gateway-mcp = "heartbeat_gateway.mcp_server:main"
 
 [project.optional-dependencies]
