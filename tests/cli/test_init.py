@@ -65,7 +65,7 @@ def test_backup_created_on_overwrite(monkeypatch, tmp_path):
     env_file.write_text("EXISTING_VAR=existing_value\n")
     runner = CliRunner()
     with runner.isolated_filesystem(temp_dir=tmp_path):
-        result = runner.invoke(cli, ["init"], input="y\n\n")
+        runner.invoke(cli, ["init"], input="y\n\n")
     # A backup file (.env.bak or similar) must exist alongside .env
     backup_files = list(tmp_path.glob(".env.bak*")) + list(tmp_path.glob(".env.backup*"))
     assert len(backup_files) > 0, "No backup file found after overwriting .env"
@@ -113,11 +113,11 @@ def test_wizard_happy_path(monkeypatch, tmp_path):
     # Drive every expected prompt in sequence
     user_input = "\n".join(
         [
-            valid_uuid,         # Linear project UUID
-            linear_secret,      # Linear webhook secret
-            github_secret,      # GitHub webhook secret
-            "",                 # Accept default or confirm
-            "",                 # Final confirmation
+            valid_uuid,  # Linear project UUID
+            linear_secret,  # Linear webhook secret
+            github_secret,  # GitHub webhook secret
+            "",  # Accept default or confirm
+            "",  # Final confirmation
         ]
     )
     result = runner.invoke(cli, ["init"], input=user_input + "\n")

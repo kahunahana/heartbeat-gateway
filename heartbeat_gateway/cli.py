@@ -20,3 +20,7 @@ def serve() -> None:
 from heartbeat_gateway.commands.doctor import doctor  # noqa: E402
 
 cli.add_command(doctor)
+
+from heartbeat_gateway.commands.init import init  # noqa: E402
+
+cli.add_command(init)
