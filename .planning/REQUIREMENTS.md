@@ -13,18 +13,18 @@
 
 ### gateway doctor
 
-- [ ] **DOC-01**: `gateway doctor` runs all checks and exits 0 only if no FAIL-level issues found
-- [ ] **DOC-02**: Each check carries a `fix_hint` string shown inline on failure — not just "FAIL" with no guidance
-- [ ] **DOC-03**: Default output shows only WARN and FAIL; `--verbose` flag shows all checks including PASS
-- [ ] **DOC-04**: Check — config loads without `ValidationError` (catches nested BaseSettings regression)
-- [ ] **DOC-05**: Check — SOUL.md exists at configured path and is readable
-- [ ] **DOC-06**: Check — Anthropic API key present and matches `sk-ant-` prefix format
-- [ ] **DOC-07**: Check — HMAC secrets non-empty for each configured source (Linear, GitHub, PostHog)
-- [ ] **DOC-08**: Check — Linear `project_ids` parseable as valid UUID format (not just non-empty string)
-- [ ] **DOC-09**: Check — body size limit is ≥ 512KB (guards against 10KB regression)
-- [ ] **DOC-10**: Check — SOUL.md content linter warns if scoping patterns detected (repo names, UUIDs in SOUL.md — these belong in pre_filter)
-- [ ] **DOC-11**: Doctor tests use `monkeypatch.setenv` + `CliRunner` — no mocked `GatewayConfig` (guards against BaseSettings test blind spot)
-- [ ] **DOC-12**: `gateway doctor` accepts `--env-file <path>` flag for users with multiple environments
+- [x] **DOC-01**: `gateway doctor` runs all checks and exits 0 only if no FAIL-level issues found
+- [x] **DOC-02**: Each check carries a `fix_hint` string shown inline on failure — not just "FAIL" with no guidance
+- [x] **DOC-03**: Default output shows only WARN and FAIL; `--verbose` flag shows all checks including PASS
+- [x] **DOC-04**: Check — config loads without `ValidationError` (catches nested BaseSettings regression)
+- [x] **DOC-05**: Check — SOUL.md exists at configured path and is readable
+- [x] **DOC-06**: Check — Anthropic API key present and matches `sk-ant-` prefix format
+- [x] **DOC-07**: Check — HMAC secrets non-empty for each configured source (Linear, GitHub, PostHog)
+- [x] **DOC-08**: Check — Linear `project_ids` parseable as valid UUID format (not just non-empty string)
+- [x] **DOC-09**: Check — body size limit is ≥ 512KB (guards against 10KB regression)
+- [x] **DOC-10**: Check — SOUL.md content linter warns if scoping patterns detected (repo names, UUIDs in SOUL.md — these belong in pre_filter)
+- [x] **DOC-11**: Doctor tests use `monkeypatch.setenv` + `CliRunner` — no mocked `GatewayConfig` (guards against BaseSettings test blind spot)
+- [x] **DOC-12**: `gateway doctor` accepts `--env-file <path>` flag for users with multiple environments
 
 ### gateway init
 
@@ -67,18 +67,18 @@
 | CLI-01 | Phase 1 | Complete |
 | CLI-02 | Phase 1 | Complete |
 | CLI-03 | Phase 1 | Complete |
-| DOC-01 | Phase 1 | Pending |
-| DOC-02 | Phase 1 | Pending |
-| DOC-03 | Phase 1 | Pending |
-| DOC-04 | Phase 1 | Pending |
-| DOC-05 | Phase 1 | Pending |
-| DOC-06 | Phase 1 | Pending |
-| DOC-07 | Phase 1 | Pending |
-| DOC-08 | Phase 1 | Pending |
-| DOC-09 | Phase 1 | Pending |
-| DOC-10 | Phase 1 | Pending |
-| DOC-11 | Phase 1 | Pending |
-| DOC-12 | Phase 1 | Pending |
+| DOC-01 | Phase 1 | Complete |
+| DOC-02 | Phase 1 | Complete |
+| DOC-03 | Phase 1 | Complete |
+| DOC-04 | Phase 1 | Complete |
+| DOC-05 | Phase 1 | Complete |
+| DOC-06 | Phase 1 | Complete |
+| DOC-07 | Phase 1 | Complete |
+| DOC-08 | Phase 1 | Complete |
+| DOC-09 | Phase 1 | Complete |
+| DOC-10 | Phase 1 | Complete |
+| DOC-11 | Phase 1 | Complete |
+| DOC-12 | Phase 1 | Complete |
 | INIT-01 | Phase 2 | Pending |
 | INIT-02 | Phase 2 | Pending |
 | INIT-03 | Phase 2 | Pending |
@@ -96,4 +96,4 @@
 
 ---
 *Requirements defined: 2026-03-25*
-*Last updated: 2026-03-25 after initial definition*
+*Last updated: 2026-03-25 after Plan 02 execution — DOC-01 through DOC-12 complete*

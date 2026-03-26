@@ -10,11 +10,11 @@
 
 **Requirements:** CLI-01, CLI-02, CLI-03, DOC-01, DOC-02, DOC-03, DOC-04, DOC-05, DOC-06, DOC-07, DOC-08, DOC-09, DOC-10, DOC-11, DOC-12
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans executed
 
 Plans:
-- [ ] 01-01-PLAN.md — CLI foundation: Click group + pyproject.toml entry point + Wave 0 test stubs
-- [ ] 01-02-PLAN.md — gateway doctor: 9 checks, rich output, --verbose, --env-file, tests flipped green
+- [x] 01-01-PLAN.md — CLI foundation: Click group + pyproject.toml entry point + Wave 0 test stubs
+- [x] 01-02-PLAN.md — gateway doctor: 9 checks, rich output, --verbose, --env-file, tests flipped green
 
 **Delivers:**
 - `heartbeat_gateway/cli.py` — Click group with `invoke_without_command=True` fallback to uvicorn
