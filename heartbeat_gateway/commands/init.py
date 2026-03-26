@@ -17,9 +17,7 @@ import questionary
 from dotenv import dotenv_values, set_key
 
 # Replicated from doctor.py — do NOT import from doctor.py
-UUID_V4_PATTERN = re.compile(
-    r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-)
+UUID_V4_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 
 ENV_PATH = Path(".env")
 
