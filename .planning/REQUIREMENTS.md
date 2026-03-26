@@ -28,15 +28,15 @@
 
 ### gateway init
 
-- [ ] **INIT-01**: `gateway init` detects non-TTY environment at startup and exits with a clear error message
-- [ ] **INIT-02**: Wizard displays Linear UUID discovery instructions (Cmd+K → "Copy model UUID") before prompting for UUID input
-- [ ] **INIT-03**: Linear project UUID input validated against UUID format regex before accepting — re-prompts on failure
-- [ ] **INIT-04**: All secret/key inputs are masked (no terminal echo)
-- [ ] **INIT-05**: Running `gateway init` when `.env` already exists creates a timestamped backup before writing
-- [ ] **INIT-06**: All values validated in-memory before any file write (atomic: write only if all valid)
-- [ ] **INIT-07**: Completion output shows next-step hint: `Run gateway doctor to verify your configuration`
-- [ ] **INIT-08**: Questionary and python-dotenv added as explicit dependencies in `pyproject.toml`
-- [ ] **INIT-09**: Init tests use `CliRunner` with `input=` for non-interactive test execution
+- [x] **INIT-01**: `gateway init` detects non-TTY environment at startup and exits with a clear error message
+- [x] **INIT-02**: Wizard displays Linear UUID discovery instructions (Cmd+K → "Copy model UUID") before prompting for UUID input
+- [x] **INIT-03**: Linear project UUID input validated against UUID format regex before accepting — re-prompts on failure
+- [x] **INIT-04**: All secret/key inputs are masked (no terminal echo)
+- [x] **INIT-05**: Running `gateway init` when `.env` already exists creates a timestamped backup before writing
+- [x] **INIT-06**: All values validated in-memory before any file write (atomic: write only if all valid)
+- [x] **INIT-07**: Completion output shows next-step hint: `Run gateway doctor to verify your configuration`
+- [x] **INIT-08**: Questionary and python-dotenv added as explicit dependencies in `pyproject.toml`
+- [x] **INIT-09**: Init tests use `CliRunner` with `input=` for non-interactive test execution
 
 ## v2 Requirements
 
@@ -79,15 +79,15 @@
 | DOC-10 | Phase 1 | Complete |
 | DOC-11 | Phase 1 | Complete |
 | DOC-12 | Phase 1 | Complete |
-| INIT-01 | Phase 2 | Pending |
-| INIT-02 | Phase 2 | Pending |
-| INIT-03 | Phase 2 | Pending |
-| INIT-04 | Phase 2 | Pending |
-| INIT-05 | Phase 2 | Pending |
-| INIT-06 | Phase 2 | Pending |
-| INIT-07 | Phase 2 | Pending |
-| INIT-08 | Phase 2 | Pending |
-| INIT-09 | Phase 2 | Pending |
+| INIT-01 | Phase 2 | Complete |
+| INIT-02 | Phase 2 | Complete |
+| INIT-03 | Phase 2 | Complete |
+| INIT-04 | Phase 2 | Complete |
+| INIT-05 | Phase 2 | Complete |
+| INIT-06 | Phase 2 | Complete |
+| INIT-07 | Phase 2 | Complete |
+| INIT-08 | Phase 2 | Complete |
+| INIT-09 | Phase 2 | Complete |
 
 **Coverage:**
 - v1 requirements: 24 total

@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v0.3
 milestone_name: milestone
-status: planning
-stopped_at: Phase 1 complete — human verified `gateway doctor` terminal output 2026-03-25
-last_updated: "2026-03-26T06:21:45.902Z"
+status: executing
+stopped_at: "Phase 2 Plan 1 complete — xfail stubs + init stub committed 2026-03-26"
+last_updated: "2026-03-26T07:22:00.000Z"
 progress:
   total_phases: 2
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
 ---
 
 # STATE.md — heartbeat-gateway
@@ -23,14 +23,14 @@ progress:
 ## Current Position
 
 - **Milestone:** v0.3.0
-- **Phase:** 1 of 2 — CLI Foundation + gateway doctor
-- **Plan:** 2 of 2 — COMPLETE (human verified 2026-03-25)
-- **Status:** Ready to plan
+- **Phase:** 2 of 2 — gateway init wizard
+- **Plan:** 1 of 2 — COMPLETE (02-01 xfail stubs + init stub, 2026-03-26)
+- **Status:** Executing Phase 2
 
 ## Progress
 
 ```
-[██████████] 100% — Phase 1 complete (gateway doctor with 9 checks, 150 tests passing)
+[███████░░░] 75% — Phase 2 Plan 1 complete (xfail stubs + init stub registered; 150+9 tests)
 ```
 
 ## Recent Decisions
@@ -44,6 +44,8 @@ progress:
 - CheckResult.fix_hint must be non-empty when status == FAIL (enforced by convention, tested in DOC-02)
 - Catch pydantic_settings.SettingsError in addition to pydantic.ValidationError — raised when JSON env vars (e.g. PROJECT_IDS=not-valid-json) fail to decode before reaching Pydantic validation
 - HMAC secret severity: FAIL if require_signatures=True, WARN otherwise — single `level` variable controls
+- xfail(strict=False) for init stubs — XPASS is safe at Wave 0; Plan 02 flips stubs to passing without changing test file
+- test_dependencies_declared uses tomllib to read pyproject.toml directly — already passes since deps declared in Phase 1
 
 ## Blockers / Concerns
 
@@ -56,6 +58,5 @@ _None captured_
 
 ## Session Continuity
 
-Last session: 2026-03-25 (Phase 1 Plan 02 executed — DoctorRunner 9 checks, 14 tests, cli.add_command registered)
-Stopped at: Phase 1 complete — human verified `gateway doctor` terminal output 2026-03-25
-Resume file: Phase 2 (gateway init) — 02-XX-PLAN.md not yet created
+Last session: 2026-03-26 (Executed Phase 2 Plan 01 — xfail stubs + init stub)
+Stopped at: Phase 2 Plan 1 complete — ready to execute 02-02-PLAN.md (gateway init implementation)

@@ -36,10 +36,10 @@ Plans:
 
 **Requirements:** INIT-01, INIT-02, INIT-03, INIT-04, INIT-05, INIT-06, INIT-07, INIT-08, INIT-09
 
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 02-01-PLAN.md — Wave 0 stubs: init.py stub + 9 xfail test stubs + cli.py registration
+- [x] 02-01-PLAN.md — Wave 0 stubs: init.py stub + 9 xfail test stubs + cli.py registration
 - [ ] 02-02-PLAN.md — Full implementation: wizard logic, flip 9 xfail stubs to passing, human verify
 
 **Delivers:**
