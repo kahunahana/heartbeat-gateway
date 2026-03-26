@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.3
 milestone_name: milestone
 status: executing
-stopped_at: "Phase 2 Plan 1 complete — xfail stubs + init stub committed 2026-03-26"
-last_updated: "2026-03-26T07:22:00.000Z"
+stopped_at: Phase 2 Plan 2 checkpoint — Tasks 1-2 complete; awaiting human verify Task 3
+last_updated: "2026-03-26T07:37:11.399Z"
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # STATE.md — heartbeat-gateway
@@ -24,13 +24,13 @@ progress:
 
 - **Milestone:** v0.3.0
 - **Phase:** 2 of 2 — gateway init wizard
-- **Plan:** 1 of 2 — COMPLETE (02-01 xfail stubs + init stub, 2026-03-26)
-- **Status:** Executing Phase 2
+- **Plan:** 2 of 2 — checkpoint (Tasks 1-2 complete; awaiting human verify Task 3)
+- **Status:** Checkpoint — human verify live terminal wizard
 
 ## Progress
 
 ```
-[███████░░░] 75% — Phase 2 Plan 1 complete (xfail stubs + init stub registered; 150+9 tests)
+[█████████░] 90% — Phase 2 Plan 2 Tasks 1-2 complete (159 tests, 1 xfailed; awaiting Task 3 human verify)
 ```
 
 ## Recent Decisions
@@ -46,6 +46,9 @@ progress:
 - HMAC secret severity: FAIL if require_signatures=True, WARN otherwise — single `level` variable controls
 - xfail(strict=False) for init stubs — XPASS is safe at Wave 0; Plan 02 flips stubs to passing without changing test file
 - test_dependencies_declared uses tomllib to read pyproject.toml directly — already passes since deps declared in Phase 1
+- _is_tty() module-level helper chosen over sys.stdin.isatty() check directly — CliRunner replaces sys.stdin entirely so monkeypatching it doesn't reach the command body
+- questionary cannot use CliRunner input= on Windows — prompt_toolkit requires Win32 console APIs; fix: patch questionary.text/.password with mock objects in tests
+- UUID a1b2c3d4-e5f6-7890-abcd-ef1234567890 in original stubs is not valid UUID v4 (third group must start with 4); corrected to 550e8400-e29b-41d4-a716-446655440000
 
 ## Blockers / Concerns
 
@@ -58,5 +61,5 @@ _None captured_
 
 ## Session Continuity
 
-Last session: 2026-03-26 (Executed Phase 2 Plan 01 — xfail stubs + init stub)
-Stopped at: Phase 2 Plan 1 complete — ready to execute 02-02-PLAN.md (gateway init implementation)
+Last session: 2026-03-26T07:37:11.395Z
+Stopped at: Phase 2 Plan 2 checkpoint — Tasks 1-2 complete; awaiting human verify Task 3
