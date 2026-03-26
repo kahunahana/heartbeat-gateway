@@ -21,12 +21,8 @@ from heartbeat_gateway.config.schema import GatewayConfig
 # Replicated from app.py — do NOT import from app.py (pulls in FastAPI + all adapters)
 EXPECTED_MIN_BODY_BYTES = 512 * 1024  # 512 KB
 
-UUID_V4_PATTERN = re.compile(
-    r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-)
-UUID_ANYWHERE_PATTERN = re.compile(
-    r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
-)
+UUID_V4_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+UUID_ANYWHERE_PATTERN = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}")
 SOUL_SCOPING_PREFIXES = re.compile(r"^\s*(repo:|branch:|project_id:)", re.MULTILINE)
 
 _console = Console()
@@ -89,6 +85,7 @@ class DoctorRunner:
 
     def _check_config_loads(self) -> tuple[CheckResult, GatewayConfig | None]:
         from pydantic import ValidationError
+        from pydantic_settings.exceptions import SettingsError
 
         try:
             config = GatewayConfig()
@@ -111,6 +108,19 @@ class DoctorRunner:
                 ),
                 None,
             )
+        except SettingsError as e:
+            return (
+                CheckResult(
+                    name="Config loads",
+                    status=CheckStatus.FAIL,
+                    message=f"Config parse error: {e}",
+                    fix_hint=(
+                        "Check that JSON env vars (e.g. GATEWAY_WATCH__LINEAR__PROJECT_IDS) "
+                        "contain valid JSON. Example: '[\"uuid-here\"]'"
+                    ),
+                ),
+                None,
+            )
 
     def _check_api_key(self, config: GatewayConfig) -> CheckResult:
         if not config.llm_api_key or not config.llm_api_key.startswith("sk-ant-"):
@@ -119,8 +129,7 @@ class DoctorRunner:
                 status=CheckStatus.FAIL,
                 message="ANTHROPIC_API_KEY missing or does not start with 'sk-ant-'",
                 fix_hint=(
-                    "Set ANTHROPIC_API_KEY=sk-ant-... in your .env file. "
-                    "Find your key at console.anthropic.com."
+                    "Set ANTHROPIC_API_KEY=sk-ant-... in your .env file. Find your key at console.anthropic.com."
                 ),
             )
         return CheckResult(
@@ -200,8 +209,7 @@ class DoctorRunner:
                     status=level,
                     message="GATEWAY_WATCH__LINEAR__SECRET is not set",
                     fix_hint=(
-                        "Set GATEWAY_WATCH__LINEAR__SECRET in .env. "
-                        "Generate in Linear Settings > API > Webhooks."
+                        "Set GATEWAY_WATCH__LINEAR__SECRET in .env. Generate in Linear Settings > API > Webhooks."
                     ),
                 )
             )
@@ -220,8 +228,7 @@ class DoctorRunner:
                     status=level,
                     message="GATEWAY_WATCH__GITHUB__SECRET is not set",
                     fix_hint=(
-                        "Set GATEWAY_WATCH__GITHUB__SECRET in .env. "
-                        "Find in GitHub repository Settings > Webhooks."
+                        "Set GATEWAY_WATCH__GITHUB__SECRET in .env. Find in GitHub repository Settings > Webhooks."
                     ),
                 )
             )
@@ -288,8 +295,7 @@ class DoctorRunner:
                     status=CheckStatus.WARN,
                     message="SOUL.md contains lines starting with repo:, branch:, or project_id:",
                     fix_hint=(
-                        "Move scoping rules to pre_filter.py. "
-                        "SOUL.md should contain priority/action rules only."
+                        "Move scoping rules to pre_filter.py. SOUL.md should contain priority/action rules only."
                     ),
                 )
             )
