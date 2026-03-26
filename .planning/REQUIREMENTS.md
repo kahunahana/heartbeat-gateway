@@ -7,9 +7,9 @@
 
 ### CLI Foundation
 
-- [ ] **CLI-01**: `heartbeat-gateway` bare invocation (no subcommand) continues to start the server — zero breaking change
-- [ ] **CLI-02**: Click added as explicit dependency in `pyproject.toml` (currently transitive only — fragile)
-- [ ] **CLI-03**: New `heartbeat_gateway/cli.py` entry point wires Click group; existing `app.py` untouched
+- [x] **CLI-01**: `heartbeat-gateway` bare invocation (no subcommand) continues to start the server — zero breaking change
+- [x] **CLI-02**: Click added as explicit dependency in `pyproject.toml` (currently transitive only — fragile)
+- [x] **CLI-03**: New `heartbeat_gateway/cli.py` entry point wires Click group; existing `app.py` untouched
 
 ### gateway doctor
 
@@ -64,9 +64,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLI-01 | Phase 1 | Pending |
-| CLI-02 | Phase 1 | Pending |
-| CLI-03 | Phase 1 | Pending |
+| CLI-01 | Phase 1 | Complete |
+| CLI-02 | Phase 1 | Complete |
+| CLI-03 | Phase 1 | Complete |
 | DOC-01 | Phase 1 | Pending |
 | DOC-02 | Phase 1 | Pending |
 | DOC-03 | Phase 1 | Pending |
