@@ -36,6 +36,12 @@ Plans:
 
 **Requirements:** INIT-01, INIT-02, INIT-03, INIT-04, INIT-05, INIT-06, INIT-07, INIT-08, INIT-09
 
+**Plans:** 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Wave 0 stubs: init.py stub + 9 xfail test stubs + cli.py registration
+- [ ] 02-02-PLAN.md — Full implementation: wizard logic, flip 9 xfail stubs to passing, human verify
+
 **Delivers:**
 - `heartbeat_gateway/commands/init.py` — sequential questionary wizard with conditional adapter sections
 - TTY detection at startup (exits cleanly if `sys.stdin.isatty()` is False)
@@ -66,3 +72,4 @@ SOUL.md linter in doctor (Phase 1): PG-3 folds into doctor at zero additional co
 *Roadmap created: 2026-03-25*
 *Source: REQUIREMENTS.md + .planning/research/SUMMARY.md*
 *Plans added: 2026-03-25*
+*Phase 2 plans added: 2026-03-26*
