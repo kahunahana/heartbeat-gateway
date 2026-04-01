@@ -88,23 +88,39 @@
 | DOC-01–12 | Phase 1 | Complete |
 | INIT-01–09 | Phase 2 | Complete |
 
-### v0.4.0 (Pending Roadmap)
+### v0.4.0
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | TBD | Pending |
-| FOUND-02 | TBD | Pending |
-| FOUND-03 | TBD | Pending |
-| FOUND-04 | TBD | Pending |
-| AMP-01–07 | TBD | Pending |
-| BTST-01–07 | TBD | Pending |
-| LSMT-01–08 | TBD | Pending |
+| FOUND-01 | Phase 3 | Pending |
+| FOUND-02 | Phase 3 | Pending |
+| FOUND-03 | Phase 3 | Pending |
+| FOUND-04 | Phase 3 | Pending |
+| BTST-01 | Phase 4 | Pending |
+| BTST-02 | Phase 4 | Pending |
+| BTST-03 | Phase 4 | Pending |
+| BTST-04 | Phase 4 | Pending |
+| BTST-05 | Phase 4 | Pending |
+| BTST-06 | Phase 4 | Pending |
+| BTST-07 | Phase 4 | Pending |
+| LSMT-01 | Phase 5 | Pending |
+| LSMT-02 | Phase 5 | Pending |
+| LSMT-03 | Phase 5 | Pending |
+| LSMT-04 | Phase 5 | Pending |
+| LSMT-05 | Phase 5 | Pending |
+| LSMT-06 | Phase 5 | Pending |
+| LSMT-07 | Phase 5 | Pending |
+| LSMT-08 | Phase 5 | Pending |
+| AMP-01 | Phase 6 | Pending |
+| AMP-02 | Phase 6 | Pending |
+| AMP-03 | Phase 6 | Pending |
+| AMP-04 | Phase 6 | Pending |
+| AMP-05 | Phase 6 | Pending |
+| AMP-06 | Phase 6 | Pending |
+| AMP-07 | Phase 6 | Pending |
 
-**v0.4.0 Coverage:**
-- Requirements: 22 total
-- Mapped to phases: 0 (roadmap not yet created)
-- Unmapped: 22 ⚠️
+**v0.4.0 Coverage: 26/26 requirements mapped** ✓
 
 ---
 *v0.3.0 requirements defined: 2026-03-25*
 *v0.4.0 requirements defined: 2026-04-01*
-*Last updated: 2026-04-01 after research phase*
+*Last updated: 2026-04-01 after roadmap creation*
