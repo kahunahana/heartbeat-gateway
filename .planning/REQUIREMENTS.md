@@ -1,51 +1,71 @@
-# Requirements: heartbeat-gateway v0.3.0
+# Requirements: heartbeat-gateway
 
-**Defined:** 2026-03-25
 **Core Value:** A developer can deploy heartbeat-gateway and have AI agents receiving real-time classified webhook events within 20 minutes.
 
-## v1 Requirements
+## v0.3.0 Requirements — All Complete ✓
 
 ### CLI Foundation
-
-- [x] **CLI-01**: `heartbeat-gateway` bare invocation (no subcommand) continues to start the server — zero breaking change
-- [x] **CLI-02**: Click added as explicit dependency in `pyproject.toml` (currently transitive only — fragile)
-- [x] **CLI-03**: New `heartbeat_gateway/cli.py` entry point wires Click group; existing `app.py` untouched
+- [x] **CLI-01**: `heartbeat-gateway` bare invocation continues to start the server — zero breaking change
+- [x] **CLI-02**: Click added as explicit dependency in `pyproject.toml`
+- [x] **CLI-03**: New `heartbeat_gateway/cli.py` entry point wires Click group; `app.py` untouched
 
 ### gateway doctor
-
-- [x] **DOC-01**: `gateway doctor` runs all checks and exits 0 only if no FAIL-level issues found
-- [x] **DOC-02**: Each check carries a `fix_hint` string shown inline on failure — not just "FAIL" with no guidance
-- [x] **DOC-03**: Default output shows only WARN and FAIL; `--verbose` flag shows all checks including PASS
-- [x] **DOC-04**: Check — config loads without `ValidationError` (catches nested BaseSettings regression)
-- [x] **DOC-05**: Check — SOUL.md exists at configured path and is readable
-- [x] **DOC-06**: Check — Anthropic API key present and matches `sk-ant-` prefix format
-- [x] **DOC-07**: Check — HMAC secrets non-empty for each configured source (Linear, GitHub, PostHog)
-- [x] **DOC-08**: Check — Linear `project_ids` parseable as valid UUID format (not just non-empty string)
-- [x] **DOC-09**: Check — body size limit is ≥ 512KB (guards against 10KB regression)
-- [x] **DOC-10**: Check — SOUL.md content linter warns if scoping patterns detected (repo names, UUIDs in SOUL.md — these belong in pre_filter)
-- [x] **DOC-11**: Doctor tests use `monkeypatch.setenv` + `CliRunner` — no mocked `GatewayConfig` (guards against BaseSettings test blind spot)
-- [x] **DOC-12**: `gateway doctor` accepts `--env-file <path>` flag for users with multiple environments
+- [x] **DOC-01** through **DOC-12**: All doctor checks, fix hints, verbose flag, env-file flag — Complete
 
 ### gateway init
+- [x] **INIT-01** through **INIT-09**: TTY detection, masked secrets, UUID validation, backup, atomic write — Complete
 
-- [x] **INIT-01**: `gateway init` detects non-TTY environment at startup and exits with a clear error message
-- [x] **INIT-02**: Wizard displays Linear UUID discovery instructions (Cmd+K → "Copy model UUID") before prompting for UUID input
-- [x] **INIT-03**: Linear project UUID input validated against UUID format regex before accepting — re-prompts on failure
-- [x] **INIT-04**: All secret/key inputs are masked (no terminal echo)
-- [x] **INIT-05**: Running `gateway init` when `.env` already exists creates a timestamped backup before writing
-- [x] **INIT-06**: All values validated in-memory before any file write (atomic: write only if all valid)
-- [x] **INIT-07**: Completion output shows next-step hint: `Run gateway doctor to verify your configuration`
-- [x] **INIT-08**: Questionary and python-dotenv added as explicit dependencies in `pyproject.toml`
-- [x] **INIT-09**: Init tests use `CliRunner` with `input=` for non-interactive test execution
+---
 
-## v2 Requirements
+## v0.4.0 Requirements — Adapter Expansion
 
-### Future phases
+**Defined:** 2026-04-01
+**Milestone goal:** Add Amplitude, Braintrust, and LangSmith webhook adapters; add PostHog section to gateway init wizard.
 
-- **PG-05**: MCP server HTTP/SSE transport (replaces stdio — fixes SSH reliability issue)
-- **DOC-RERUN**: `gateway init --rerun` prefills wizard from existing `.env` values
-- **DOC-FIX**: `gateway doctor --fix` auto-remediates WARN-level issues where safe to do so
-- **ADAPTER-SLACK**: Slack adapter (implement `verify_signature`, `normalize`, `condense`)
+### Schema & Foundation (FOUND)
+
+- [ ] **FOUND-01**: `WatchConfig` adds `AmplitudeWatchConfig` model — `secret` field (no-op for verification; exists for config symmetry; Amplitude does not sign webhooks)
+- [ ] **FOUND-02**: `WatchConfig` adds `BraintrustWatchConfig` model — `secret` field for HMAC-SHA256 verification
+- [ ] **FOUND-03**: `WatchConfig` adds `LangSmithWatchConfig` model — `token` field for custom header auth (not HMAC)
+- [ ] **FOUND-04**: `gateway init` wizard adds PostHog section — `project_id` + `secret` prompts before Linear section
+
+### Amplitude Adapter (AMP)
+
+- [ ] **AMP-01**: `AmplitudeAdapter.verify_signature()` always returns `True`; docstring explicitly documents the no-signing limitation and advises IP allowlisting as mitigation
+- [ ] **AMP-02**: Normalizes `monitor_alert` events — metric name, current value, threshold value → ACTIONABLE candidate
+- [ ] **AMP-03**: Normalizes `chart.annotation` events — annotation text, chart name → DELTA candidate
+- [ ] **AMP-04**: Returns `None` for unrecognized event types
+- [ ] **AMP-05**: `/webhooks/amplitude` route wired in `app.py`; `AmplitudeAdapter` registered in app state; pre-filter integration
+- [ ] **AMP-06**: `gateway init` includes Amplitude section — secret prompt with no-signing warning displayed inline
+- [ ] **AMP-07**: Unit tests (verify passthrough, normalize monitor_alert, normalize annotation, normalize unknown→None) + fixture JSON in `tests/fixtures/` + `docs/adapters.md` updated
+
+### Braintrust Adapter (BTST)
+
+- [ ] **BTST-01**: `BraintrustAdapter.verify_signature()` uses HMAC-SHA256; exact header name confirmed at build time from `braintrust.dev/docs/guides/automations`
+- [ ] **BTST-02**: `normalize()` returns `None` as its **first action** when `payload.get("details", {}).get("is_test") == True` — prevents phantom HEARTBEAT entries on every automation save
+- [ ] **BTST-03**: Normalizes `logs` events with failing scores (BTQL-filtered automations) — score name, value, project name → ACTIONABLE
+- [ ] **BTST-04**: Normalizes `environment_update` events — env name, change type → DELTA
+- [ ] **BTST-05**: `/webhooks/braintrust` route wired in `app.py`; `BraintrustAdapter` registered; pre-filter integration
+- [ ] **BTST-06**: `gateway init` includes Braintrust section — secret prompt + BTQL automation setup instructions
+- [ ] **BTST-07**: Unit tests (verify HMAC, is_test→None, logs normalize, env_update normalize, unknown→None) + fixture JSON + `docs/adapters.md` updated
+
+### LangSmith Adapter (LSMT)
+
+- [ ] **LSMT-01**: `LangSmithAdapter.verify_signature()` validates `X-Langsmith-Secret` custom header token (not HMAC); returns `True` if no token configured (same pattern as other adapters)
+- [ ] **LSMT-02**: Normalizes run completion events with errors — run name, error message, project name → ACTIONABLE
+- [ ] **LSMT-03**: Normalizes feedback submission events with negative scores — feedback key, score, comment → ACTIONABLE
+- [ ] **LSMT-04**: Normalizes alert threshold events — metric name, current/threshold values → ACTIONABLE
+- [ ] **LSMT-05**: Returns `None` for `run.completed` events with no errors (high-volume noise; always drop)
+- [ ] **LSMT-06**: `/webhooks/langsmith` route wired in `app.py`; `LangSmithAdapter` registered; pre-filter integration
+- [ ] **LSMT-07**: `gateway init` includes LangSmith section — token prompt + webhook URL instructions
+- [ ] **LSMT-08**: Unit tests (verify token, run error→normalize, feedback→normalize, alert→normalize, clean run→None) + fixture JSON + `docs/adapters.md` updated (notes dataset webhooks as unavailable)
+
+## v2 Requirements (Deferred)
+
+- **ARIZE-01**: Arize AX adapter — deferred; OSS Phoenix has no outbound webhooks; requires Arize AX (hosted/paid)
+- **LSMT-DATASET**: LangSmith dataset change webhooks — not available in LangSmith API as of 2026-04-01
+- **PG-05**: MCP server HTTP/SSE transport (replaces stdio — fixes SSH reliability)
+- **ADAPTER-SLACK**: Slack adapter
 - **ADAPTER-SENTRY**: Sentry adapter
 - **ADAPTER-PD**: PagerDuty adapter
 
@@ -53,47 +73,38 @@
 
 | Feature | Reason |
 |---------|--------|
-| PostHog adapter | No active PostHog project to validate against; demand unconfirmed |
+| Arize Phoenix OSS adapter | OSS product emits no webhooks; Arize AX deferred to future milestone |
+| LangSmith dataset change webhooks | Not available in LangSmith API as of 2026-04-01 |
+| Batch/streaming ingestion | Webhook-first constraint maintained (Amplitude Data Export, LangSmith bulk export) |
 | Web UI / dashboard | Contradicts markdown-as-API design philosophy |
-| OAuth browser flow in `gateway init` | Breaks SSH-only VPS target; secrets must be pasted |
-| TUI framework (textual, urwid) | Break in tmux/SSH — exactly where gateway runs |
-| Network connectivity tests in `gateway doctor` | Adds latency, creates false confidence, out of scope for config validation |
 | Multi-tenant / SaaS | Single-operator tool by design |
 
 ## Traceability
 
+### v0.3.0 (All Complete)
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLI-01 | Phase 1 | Complete |
-| CLI-02 | Phase 1 | Complete |
-| CLI-03 | Phase 1 | Complete |
-| DOC-01 | Phase 1 | Complete |
-| DOC-02 | Phase 1 | Complete |
-| DOC-03 | Phase 1 | Complete |
-| DOC-04 | Phase 1 | Complete |
-| DOC-05 | Phase 1 | Complete |
-| DOC-06 | Phase 1 | Complete |
-| DOC-07 | Phase 1 | Complete |
-| DOC-08 | Phase 1 | Complete |
-| DOC-09 | Phase 1 | Complete |
-| DOC-10 | Phase 1 | Complete |
-| DOC-11 | Phase 1 | Complete |
-| DOC-12 | Phase 1 | Complete |
-| INIT-01 | Phase 2 | Complete |
-| INIT-02 | Phase 2 | Complete |
-| INIT-03 | Phase 2 | Complete |
-| INIT-04 | Phase 2 | Complete |
-| INIT-05 | Phase 2 | Complete |
-| INIT-06 | Phase 2 | Complete |
-| INIT-07 | Phase 2 | Complete |
-| INIT-08 | Phase 2 | Complete |
-| INIT-09 | Phase 2 | Complete |
+| CLI-01–03 | Phase 1 | Complete |
+| DOC-01–12 | Phase 1 | Complete |
+| INIT-01–09 | Phase 2 | Complete |
 
-**Coverage:**
-- v1 requirements: 24 total
-- Mapped to phases: 24
-- Unmapped: 0 ✓
+### v0.4.0 (Pending Roadmap)
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| FOUND-01 | TBD | Pending |
+| FOUND-02 | TBD | Pending |
+| FOUND-03 | TBD | Pending |
+| FOUND-04 | TBD | Pending |
+| AMP-01–07 | TBD | Pending |
+| BTST-01–07 | TBD | Pending |
+| LSMT-01–08 | TBD | Pending |
+
+**v0.4.0 Coverage:**
+- Requirements: 22 total
+- Mapped to phases: 0 (roadmap not yet created)
+- Unmapped: 22 ⚠️
 
 ---
-*Requirements defined: 2026-03-25*
-*Last updated: 2026-03-25 after Plan 02 execution — DOC-01 through DOC-12 complete*
+*v0.3.0 requirements defined: 2026-03-25*
+*v0.4.0 requirements defined: 2026-04-01*
+*Last updated: 2026-04-01 after research phase*
