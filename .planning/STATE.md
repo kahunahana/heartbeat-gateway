@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v0.3
 milestone_name: milestone
-status: executing
-stopped_at: Phase 2 Plan 2 checkpoint — Tasks 1-2 complete; awaiting human verify Task 3
-last_updated: "2026-03-26T07:37:11.399Z"
+status: complete
+stopped_at: null
+last_updated: "2026-03-31T00:00:00.000Z"
 progress:
   total_phases: 2
   completed_phases: 2
@@ -22,15 +22,15 @@ progress:
 
 ## Current Position
 
-- **Milestone:** v0.3.0
-- **Phase:** 2 of 2 — gateway init wizard
-- **Plan:** 2 of 2 — checkpoint (Tasks 1-2 complete; awaiting human verify Task 3)
-- **Status:** Checkpoint — human verify live terminal wizard
+- **Milestone:** v0.3.0 — **COMPLETE**
+- **Phase:** 2 of 2 — gateway init wizard — **COMPLETE**
+- **Plan:** 2 of 2 — human verify passed 2026-03-31
+- **Status:** Complete — all phases done, ready to push
 
 ## Progress
 
 ```
-[█████████░] 90% — Phase 2 Plan 2 Tasks 1-2 complete (159 tests, 1 xfailed; awaiting Task 3 human verify)
+[██████████] 100% — v0.3.0 complete (159 tests, 1 xfailed; PG-1 + PG-2 closed)
 ```
 
 ## Recent Decisions
@@ -54,6 +54,7 @@ progress:
 
 - litellm pinned to `<1.82.7` pending BerriAI supply chain audit (carry-forward from v0.2.0)
 - PG-4 (Linear adapter bug) carry-forward — not in v0.3.0 scope
+- Integration test fixtures should explicitly zero secrets to prevent uv .env auto-loading from affecting test results (carry-forward)
 
 ## Pending Todos
 

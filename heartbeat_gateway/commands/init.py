@@ -91,7 +91,7 @@ def init() -> None:
     if workspace_path is None:
         raise SystemExit(1)
     if workspace_path.strip():
-        answers["GATEWAY_WORKSPACE_PATH"] = workspace_path.strip()
+        answers["GATEWAY_WORKSPACE_PATH"] = workspace_path.strip().strip("\"'")
 
     # GATEWAY_SOUL_MD_PATH
     soul_md_path = questionary.text(
@@ -101,7 +101,7 @@ def init() -> None:
     if soul_md_path is None:
         raise SystemExit(1)
     if soul_md_path.strip():
-        answers["GATEWAY_SOUL_MD_PATH"] = soul_md_path.strip()
+        answers["GATEWAY_SOUL_MD_PATH"] = soul_md_path.strip().strip("\"'")
 
     # GATEWAY_LLM_MODEL
     llm_model = questionary.text(
@@ -182,4 +182,5 @@ def init() -> None:
     # --- INIT-07: Completion message with gateway doctor hint ---
     click.echo("")
     click.echo("Configuration written to .env")
-    click.echo("Run gateway doctor to verify your configuration.")
+    click.echo("Verify your configuration:")
+    click.echo("  uv run heartbeat-gateway doctor --env-file .env")
