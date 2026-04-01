@@ -1,17 +1,19 @@
 # Project Research Summary
 
-**Project:** heartbeat-gateway v0.3.0 — `gateway doctor` and `gateway init`
-**Domain:** Python CLI subcommands — config validator and interactive setup wizard
-**Researched:** 2026-03-25
-**Confidence:** HIGH
+**Project:** heartbeat-gateway v0.4.0 — Amplitude, Braintrust, LangSmith Adapter Expansion
+**Domain:** Webhook gateway — LLM observability and product analytics adapters
+**Researched:** 2026-03-31
+**Confidence:** MEDIUM-HIGH
+
+---
 
 ## Executive Summary
 
-heartbeat-gateway v0.3.0 closes two documented product gaps (PG-1 and PG-2) with two Click subcommands: `gateway doctor` pre-flight config validator and `gateway init` interactive setup wizard. Both commands follow well-established CLI patterns with a strong body of prior art — `flutter doctor`, `brew doctor`, `expo doctor`, `fly launch`, AlgoKit init — and the implementation surface is well-understood. The stack addition is four explicit dependencies (click, rich, questionary, python-dotenv) on top of infrastructure that is already present as transitive dependencies. The architecture is a thin `cli.py` dispatch layer over isolated `commands/doctor.py` and `commands/init.py` modules, keeping the existing FastAPI app untouched.
+v0.4.0 expands heartbeat-gateway with three new webhook adapters — Amplitude, Braintrust, and LangSmith — plus a PostHog section in the `gateway init` wizard. Arize Phoenix has been confirmed out of scope: the open-source, self-hosted Phoenix product does not support outbound webhooks, confirmed independently by two parallel researchers across multiple sources. There is no Phoenix adapter to build. All three remaining platforms have real, documented webhook capabilities and integrate within the existing webhook-first architecture with no structural changes to the core pipeline (Adapter → PreFilter → Classifier → Writer).
 
-The two commands have a deliberate dependency ordering that mirrors the user's onboarding flow: `gateway init` writes the `.env`, `gateway doctor` validates it, then the service starts. This flow also collapses PG-3 (SOUL.md has no schema/linter) into `gateway doctor` at no additional cost — the SOUL.md content check belongs in doctor's check list, not as a separate command. Two product gaps close for the price of one feature.
+The dominant implementation risk is authentication inconsistency across platforms. None of the three new adapters use the same auth model. Braintrust uses HMAC-SHA256 with a confirmed algorithm but an unconfirmed header name. LangSmith uses a static custom-header token with no HMAC computation. Amplitude signs nothing — its endpoint security is URL-only, and Amplitude engineering has confirmed no plans to change this. The existing `verify_signature` interface accommodates all three because the empty-secret passthrough already handles the no-signature case, but each adapter's documentation must set clear operator expectations. The Braintrust header name must be verified against live docs before `verify_signature` is coded — guessing silently breaks verification without raising errors.
 
-The primary implementation risks are not technical — they are UX. Shallow checks that report "present" instead of "valid" destroy doctor's entire value proposition. The Linear UUID input step is the single highest-friction moment in the wizard, requiring an explicit instruction block and inline validation before the field is accepted. And `gateway init` must default to merge-not-overwrite on re-run with a timestamped backup, because the credentials it collects (HMAC secrets) cannot be recovered after overwrite. Getting these three things right is the difference between a command that users trust and one they ignore.
+The codebase pattern is well-established and tight. Each adapter adds one Python file and touches four existing files (`schema.py`, `app.py`, `pre_filter.py`, `commands/init.py`) plus a test file and two or more fixture JSON files. There are no architectural novelties for Braintrust or LangSmith. Amplitude has one structural quirk — its monitor payload wraps alerts in a `charts` array rather than a top-level `event_type` field — and LangSmith wraps the Run object under a `kwargs` key. Both are fully documented by research. Neither requires changes to the base class or pipeline.
 
 ---
 
@@ -19,129 +21,136 @@ The primary implementation risks are not technical — they are UX. Shallow chec
 
 ### Recommended Stack
 
-The project already has Click 8.3.1 available as a transitive dependency of uvicorn and litellm, but it is not declared as a direct dependency. This is the first thing to fix: add `click>=8.1.0` to `pyproject.toml` explicitly. The command surface is small and well-defined (two subcommands, simple argument surfaces), so Click's decorator-based API is the right choice — Typer adds a dependency for no gain here.
+No new dependencies are required. All three adapters are pure HTTP webhook integrations. The existing stack — FastAPI, pydantic, pydantic-settings, and Python stdlib `hmac`/`hashlib` — covers everything. The `WatchConfig` schema extension for each adapter follows the identical pattern used by Linear, GitHub, and PostHog. The critical constraint reinforced by this research is the `BaseModel`-not-`BaseSettings` requirement for all new `*WatchConfig` classes, which remains the highest-severity codebase-level risk.
 
-Three additional dependencies are required: `rich>=13.0.0` for structured terminal output (the `[OK]` / `[FAIL]` / `[WARN]` check table), `questionary>=2.0.0` for the interactive wizard prompts (text, password, confirm, select — all four are needed), and `python-dotenv>=1.0.0` so doctor can read the `.env` file via `dotenv_values()` without contaminating `os.environ`. All four are pure-Python, actively maintained, and have no conflicts with the existing stack.
-
-**Core technologies:**
-- `click>=8.1.0`: CLI group and subcommand dispatch — already present transitively, must be made explicit
-- `rich>=13.0.0`: Structured `[OK]`/`[FAIL]`/`[WARN]` output table — de facto standard for Python CLI formatting in 2025/2026
-- `questionary>=2.0.0`: Wizard prompts (text, password, confirm, select) — correct abstraction over prompt_toolkit for a sequential wizard flow
-- `python-dotenv>=1.0.0`: `dotenv_values(".env")` returns a plain dict without side-effecting `os.environ` — purpose-built for doctor's validation use case
-
-**Do not add:** Typer, rich-click, PyInquirer, InquirerPy, prompt_toolkit directly, click-params.
+**Core technologies (unchanged from v0.3.0):**
+- FastAPI — route registration; adds four POST routes, no other changes
+- pydantic-settings with `env_nested_delimiter="__"` — nested watch config loading via env vars
+- Python stdlib `hmac` + `hashlib` — used for Braintrust HMAC verification; not used by Amplitude or LangSmith
+- `questionary` — init wizard prompts; new sections follow the established patching pattern from v0.3.0
 
 ### Expected Features
 
-**gateway doctor — must have (table stakes):**
-- Named per-check output with three-state status: PASS / WARN / FAIL
-- Every FAIL includes a `fix_hint` field with the exact env var name or command to fix it
-- Checks cover all five known v0.2.0 silent failure modes (API key, workspace path, SOUL.md, Linear project IDs, GitHub repos)
-- SOUL.md content linter (PG-3 folded in): WARN if SOUL.md contains UUID patterns or scoping keywords
-- Exit code 0 on all-pass or WARN-only; exit code 1 on any FAIL
-- Works without the server running — pure config inspection, no HTTP calls
-- Summary line always printed: "X checks passed, Y failed"
-- Show only failures by default; `--verbose` shows all checks
+**Must have (table stakes):**
+- Amplitude `monitor.alert` — KPI threshold crossed; highest-value signal from Amplitude
+- Braintrust `log.matched` — BTQL-filtered log automation fired; proxy for eval failures since Braintrust has no native eval-failure webhook
+- Braintrust `is_test` suppression — every automation save fires a test payload; `normalize()` must return `None` when `details.is_test == true`
+- LangSmith `run.error` — production run failed with an error; most common agent error signal
+- LangSmith `alert.error_count` and `alert.feedback_score` — threshold-based batch alerting
+- PostHog wizard section — existing adapter gets its missing init prompts (CARRY-1 fix)
 
-**gateway init — must have (table stakes):**
-- Guided questions in logical order: workspace path → LLM model → API key → Linear secret + project IDs → GitHub secret + repos
-- Password masking for all secret inputs (`questionary.password()`)
-- Inline UUID format validation for Linear project IDs with a framed instruction block showing how to find the UUID in Linear
-- Confirm-to-overwrite if `.env` exists; default to merge; create timestamped backup before any write
-- Collect and validate all inputs in memory before writing anything to disk
-- Show key names written at end (never values); print next step: `gateway doctor`
-- TTY detection at startup: exit cleanly with a clear message if `sys.stdin.isatty()` returns False
+**Should have (competitive):**
+- Braintrust `prompt.deployed` — prompt version change in a named environment; useful for tracking model deployments
+- LangSmith `alert.latency` — performance regression signal; classify as DELTA by default
+- Amplitude `cohort.membership` — secondary payload type; classify as DELTA; recommend pre-filter drop unless SOUL.md specifically cares about cohort changes
 
-**Should have (differentiators):**
-- Check groups/categories in doctor output: `[Environment]`, `[Files]`, `[Adapters]`, `[LLM]`
-- Advisory security warning when `GATEWAY_REQUIRE_SIGNATURES=false` but adapters are configured
-- `--dry-run` flag on `gateway init` (renders .env content to stdout without writing)
-- Conditional adapter sections in init wizard (skip Linear questions if user doesn't use Linear)
-- SOUL.md template creation in init if SOUL.md doesn't exist at configured path
-
-**Defer to later:**
-- `--fix` flag on doctor (safe directory creation only)
-- `--json` output on doctor (CI scripting)
-- Re-run prefill from existing `.env` (high complexity — high value but warrants its own iteration)
-- PostHog wizard section (adapter doesn't exist yet — would be dead code)
-- Linear API key path that auto-discovers project UUIDs
+**Defer to v2+:**
+- Arize Phoenix adapter — confirmed no outbound webhook support in OSS product; no viable path within the webhook-first architecture
+- LangSmith dataset change webhooks — confirmed gap against user expectation; LangSmith does not expose dataset changes as webhook events (see Gaps section)
+- Amplitude Event Streaming adapter — high-volume raw events, not alert signals; violates webhook-first design intent
+- Braintrust experiment/eval run webhooks — Braintrust does not expose these natively; only log-based BTQL filter automations fire webhooks
 
 ### Architecture Approach
 
-The architecture is a thin dispatch layer (`heartbeat_gateway/cli.py`) over isolated command modules (`heartbeat_gateway/commands/doctor.py`, `heartbeat_gateway/commands/init.py`). The existing `heartbeat-gateway` entry point must not break: use `invoke_without_command=True` on the Click group so bare `heartbeat-gateway` still starts uvicorn. The critical boundary rule is that `doctor.py` and `init.py` must never import from `app.py` — they depend only on `config/`. This keeps both commands testable without starting FastAPI or uvicorn. Config is loaded once at the `doctor()` command level and passed into each check function — check functions never call `GatewayConfig()` directly.
+The existing five-stage pipeline is unchanged. All three adapters integrate at the Adapter layer only. The `_process_webhook(request, source)` function in `app.py` uses `getattr(state, f"{source}_adapter")` — adapter state attribute names must match the source string exactly. No changes needed to classifier, writer, or MCP server. The `pre_filter.py` `ALWAYS_DROP` dict and per-source scoping blocks receive new entries for each adapter, following the established pattern.
 
-**Major components:**
-1. `heartbeat_gateway/cli.py` — Click group, `serve`/`doctor`/`init` registration, `invoke_without_command` fallback
-2. `heartbeat_gateway/commands/doctor.py` — `DoctorRunner` class, individual check functions returning `(passed: bool, message: str, fix_hint: str)`
-3. `heartbeat_gateway/commands/init.py` — sequential questionary prompts, in-memory validation, atomic `.env` write with backup
-4. `tests/cli/test_doctor.py` and `tests/cli/test_init.py` — Click `CliRunner`-based tests; use `monkeypatch.setenv` not mocked `GatewayConfig`
+**Files changed across v0.4.0:**
 
-**Build order is fixed by dependency:** cli.py group must exist before doctor or init can be registered. Wire the group and `serve` first (Step 1), then update pyproject.toml entry point (Step 2), then build doctor logic (Step 3), then wire doctor (Step 4), then build init logic (Step 5), then wire init (Step 6).
+| File | Status | Changes |
+|------|--------|---------|
+| `heartbeat_gateway/config/schema.py` | Modified | +3 new WatchConfig subclasses, +3 fields on WatchConfig |
+| `heartbeat_gateway/app.py` | Modified | +3 imports, +3 adapter instantiations, +3 routes, +3 redirects, +3 entries in require_signatures guard, PostHog added to guard |
+| `heartbeat_gateway/pre_filter.py` | Modified | +3 ALWAYS_DROP entries, +3 scoping blocks |
+| `heartbeat_gateway/commands/init.py` | Modified | +4 wizard sections (PostHog + 3 adapters), +8 prompts |
+| `heartbeat_gateway/adapters/amplitude.py` | New | AmplitudeAdapter |
+| `heartbeat_gateway/adapters/braintrust.py` | New | BraintrustAdapter |
+| `heartbeat_gateway/adapters/langsmith.py` | New | LangSmithAdapter |
+| `tests/adapters/test_amplitude.py` | New | |
+| `tests/adapters/test_braintrust.py` | New | |
+| `tests/adapters/test_langsmith.py` | New | |
+| `tests/fixtures/amplitude_*.json` | New | min 2 fixtures |
+| `tests/fixtures/braintrust_*.json` | New | min 2 fixtures |
+| `tests/fixtures/langsmith_*.json` | New | min 2 fixtures |
+
+No changes required to `base.py`, `classifier.py`, `writer.py`, `mcp_server.py`, or `classify.yaml`.
 
 ### Critical Pitfalls
 
-1. **Shallow checks that report "present" not "valid"** — Every check must validate format and accessibility, not just existence. `ANTHROPIC_API_KEY` must start with `sk-ant-`. `LINEAR__PROJECT_IDS` must parse as a JSON array of valid UUIDs. `GATEWAY_WORKSPACE_PATH` must pass `os.access(path, os.W_OK)`, not just `path.exists()`. Test each check with a plausible-but-wrong value — doctor must fail, not pass.
+1. **Braintrust `is_test: true` must return None from `normalize()`** — Every time an operator saves or updates a Braintrust automation, Braintrust sends a test payload with `details.is_test == true`. Failing to check this creates spurious HEARTBEAT.md entries on every UI save. Check `payload.get("details", {}).get("is_test", False)` as the first operation in `normalize()`. Fixture required: `braintrust_test_delivery.json` with `is_test: true`; must assert `normalize()` returns `None`.
 
-2. **No fix instructions on failures (diagnosis without treatment)** — Every FAIL output must carry a `fix_hint` with the exact command or env var name to fix it. Never emit a FAIL without a `fix_hint`. Tests must assert `fix_hint` is non-empty for every FAIL case. This is the most common failure mode in real-world doctor implementations (documented in gemini-cli #18692, Claude Code #5563).
+2. **Amplitude `verify_signature` is a permanent passthrough — document it explicitly** — Amplitude confirmed they cannot send webhooks with credentials. The `verify_signature` method must return `True` regardless of whether a secret is configured, because Amplitude never sends a signature. Setting a secret in config would cause 401s on all incoming Amplitude events. The config field exists for symmetry and future compatibility only. The adapter docstring and wizard prompt must both state this limitation. Do not read an HMAC header that does not exist.
 
-3. **`gateway init` silently overwrites credentials on re-run** — Before writing anything, check if `.env` exists. Default to merge. Create a timestamped backup (`.env.backup.2026-03-25T12-00-00`). Credentials lost to overwrite (HMAC secrets) cannot be recovered from the Linear/GitHub side.
+3. **Braintrust signature header name is unconfirmed — do not guess** — HMAC-SHA256 is confirmed (AIR release notes, July 2025). The exact header name is inferred as `x-braintrust-signature` from convention, not from verified docs. A wrong header name silently accepts all requests without verification. Before writing `verify_signature`, open `braintrust.dev/docs/guides/automations` and confirm the header name. If it cannot be confirmed, implement as passthrough with a `# TODO: verify header name from official docs` comment — do not ship a guessed header name.
 
-4. **Interactive prompts break in non-TTY environments** — Check `sys.stdin.isatty()` at the start of `gateway init`. If False, exit with a clear message and exit code 1. Target users run setup over SSH on a VPS; `tmux`, `screen`, and piped scripts are all plausible. Do not attempt a non-interactive fallback — a partial wizard that writes incomplete config is worse than no run.
+4. **LangSmith payload nests under `kwargs` — flat payload assumptions break everything** — LangSmith automation rule webhooks wrap the Run object under a `kwargs` key. `payload.get("run_type", "")` returns empty string; `normalize()` returns None for all events. Access `payload.get("kwargs", {}).get("run_type", "")` and `payload.get("kwargs", {}).get("error")`. Write the fixture with the real nested structure before writing the adapter code.
 
-5. **Tests that mock `GatewayConfig` miss real loading failures** — Use `monkeypatch.setenv` in at least one integration-level test per doctor check. The `BaseModel`/`BaseSettings` constraint (root cause of the v0.2.0 security regression) cannot be caught by tests that bypass config loading entirely. Specifically: set `GATEWAY_WATCH__LINEAR__PROJECT_IDS=not-valid-json`, call `load_config()`, confirm doctor catches and reports it.
+5. **`BaseModel` not `BaseSettings` for all new WatchConfig classes** — All new `*WatchConfig` classes must inherit `BaseModel`, not `BaseSettings`. BaseSettings causes independent instantiation via `default_factory`, silently bypassing `GatewayConfig`'s env loading and zeroing all secrets. This is the v0.2.0 security regression pattern. Add a regression test for each adapter: set the env var via `monkeypatch.setenv`, instantiate `GatewayConfig()`, assert the secret loaded correctly.
+
+6. **`condense()` must be deterministic — never include timestamps, counts, or run IDs** — The `writer.py` dedup fingerprint is `payload_condensed`. For Braintrust: use `automation["name"]`, not `details["count"]` or `details["time_start"]`. For LangSmith: use `kwargs["name"]` + `kwargs["session_name"]`, not `webhook_sent_at`. For Amplitude: use `charts[0]["header"]`, not `what_happened` (which embeds a timestamp). Two redeliveries of the same event must produce identical `condense()` output.
 
 ---
 
 ## Implications for Roadmap
 
-Based on research, the two commands are developed sequentially because `gateway doctor` must exist and be trusted before users can validate what `gateway init` produced. Within each command, the build order is fixed by the Click group dependency.
+### Resolved Build Order
 
-### Phase 1: CLI Foundation + gateway doctor
+Four researchers suggested conflicting orders. The synthesis is:
 
-**Rationale:** Click group wiring is a prerequisite for both commands. Doctor must exist before init can be validated. Doctor also closes PG-2 and PG-3 simultaneously (the SOUL.md linter belongs here). Starting with doctor forces the check data structure — `(passed, message, fix_hint)` — to be defined correctly before init logic touches it.
+**Schema Foundation → Braintrust → LangSmith → Amplitude**
 
-**Delivers:** A fully functional `gateway doctor` command with 8 checks, structured output, exit code discipline, and the SOUL.md content linter. The existing `heartbeat-gateway` entry point continues working unchanged. pyproject.toml declares all four new explicit dependencies.
+This matches the Architecture researcher's recommendation and is the order with the strongest rationale across all four files.
 
-**Addresses:** All table-stakes features for doctor; SOUL.md linter (PG-3 folded in); advisory security warning for `require_signatures=false`.
+**Why Braintrust before LangSmith:** Braintrust has the most uniform payload envelope (`organization/project/automation/details` structure) and the most confirmed payload shape. It is the cleanest template for establishing fixture conventions. LangSmith is equally well-documented but has a structural novelty (`kwargs` nesting) that is easier to tackle after the first adapter baseline exists.
 
-**Avoids:** Shallow check pitfall (CRITICAL-1) by requiring `fix_hint` field on every check struct; exit code pitfall (MODERATE-1) by testing `result.exit_code` explicitly; test-mocking pitfall (MODERATE-2) by using `monkeypatch.setenv` for integration tests.
+**Why LangSmith before Amplitude:** LangSmith's payload shapes (automation and alert) are confirmed from official docs. Its auth model (custom-header token, no HMAC) is unusual but simpler to implement correctly than Amplitude's no-auth-at-all limitation combined with a dual-shape payload (monitor alert vs cohort membership). Building Amplitude last means the infrastructure is proven before tackling its highest-complexity edge cases.
 
-**Key implementation constraints:**
-- Wire `cli.py` group before writing any check logic (build order Step 1 first)
-- Every check function receives a `GatewayConfig` instance — never calls `GatewayConfig()` internally
-- `commands/doctor.py` and `cli.py` must not import from `app.py`
-- Click must be added as an explicit dependency in `pyproject.toml` regardless of transitive availability
+**Override of competing recommendations:** Stack (Braintrust first — adopted) and Architecture (same order — adopted) agree. Features (LangSmith first — overridden because Braintrust's uniform envelope is better as a first-adapter template). Pitfalls (Amplitude first because of no-HMAC — overridden because Amplitude is the most complex adapter and benefits from established infrastructure).
 
-### Phase 2: gateway init
+### Phase 1: Schema Foundation + PostHog Wizard
 
-**Rationale:** Init is only coherent once doctor exists to validate its output. The wizard's natural user flow (`gateway init` → `gateway doctor` → start service) requires doctor to be complete first. Init is also the higher-UX-risk command — the Linear UUID problem is the single highest-friction step in the entire onboarding and must be solved at design time, not discovered during implementation.
+**Rationale:** Every adapter phase depends on config fields existing in `schema.py`. Bundling the PostHog wizard — which has no adapter code — saves a separate phase and fixes the CARRY-1 require_signatures gap that has been open since v0.3.0.
+**Delivers:** Three new `*WatchConfig(BaseModel)` classes on `WatchConfig`; PostHog prompts in `gateway init`; PostHog entry in `require_signatures` guard; `_HAPPY_PATH_ANSWERS` in `test_init.py` updated.
+**Avoids:** INTEGRATION-1 (BaseModel constraint), INTEGRATION-6 (wizard answer count mismatch), CARRY-1 (require_signatures gap), CARRY-3 (questionary patching for new prompt types).
+**Files:** `schema.py`, `commands/init.py`, `app.py` (minor guard addition), `tests/cli/test_init.py`
 
-**Delivers:** A fully functional `gateway init` wizard with TTY detection, conditional adapter sections, inline UUID validation with instruction block, merge-by-default `.env` handling with timestamped backup, and atomic write after in-memory validation. Closes PG-1.
+### Phase 2: Braintrust Adapter
 
-**Addresses:** All table-stakes features for init; Linear UUID instruction block; TTY detection; merge-not-overwrite `.env` handling.
+**Rationale:** Highest-confidence payload structure of the three new adapters. HMAC pattern is consistent with Linear/GitHub/PostHog, modulo the header name verification. Sets fixture and test structure baseline for subsequent phases.
+**Delivers:** `BraintrustAdapter` with `log.matched` and `prompt.deployed` (update + delete) event types; pre-filter `project_ids` scoping (Linear-style list membership); `is_test` suppression in `normalize()`; Braintrust wizard section.
+**Avoids:** BRAINTRUST-1 (`is_test` suppression), BRAINTRUST-2 (signature — requires pre-build header name verification), BRAINTRUST-3 (derive meaningful event_type from `automation.name`, not raw `automation.event_type` field), INTEGRATION-4 (real fixtures from official docs), INTEGRATION-5 (deterministic `condense()`).
+**Pre-build gate:** Verify exact HMAC header name from `braintrust.dev/docs/guides/automations` before writing `verify_signature`. One URL lookup, not a research session.
 
-**Avoids:** Init overwrite pitfall (CRITICAL-3) by defaulting to merge and creating timestamped backups; TTY pitfall (CRITICAL-4) by checking `sys.stdin.isatty()` at startup; partial-write pitfall (MODERATE-3) by collecting and validating all inputs in memory before writing; Linear UUID abandonment (CRITICAL-5) by showing the instruction block before the UUID prompt.
+### Phase 3: LangSmith Adapter
 
-**Key implementation constraints:**
-- TTY detection is the first thing `gateway init` does — before any prompts
-- In-memory validation must be complete before any disk write
-- `.env` backup must be created before any overwrite, even on explicit confirm
-- UUID regex must be `^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$` (UUID v4)
+**Rationale:** Second adapter. Well-documented payload for both automation and alert shapes. Custom-header-token `verify_signature` (no HMAC computation) is the structural novelty — simpler to implement correctly than Braintrust's HMAC.
+**Delivers:** `LangSmithAdapter` with `run.error`, `run.matched`, `alert.error_count`, `alert.latency`, and `alert.feedback_score` event types; pre-filter `project_names` scoping (Linear-style list membership); `run.completed` in `ALWAYS_DROP` to prevent volume flooding; LangSmith wizard section with `X-LangSmith-Token` header instruction.
+**Avoids:** LANGSMITH-1 (static header auth, no HMAC), LANGSMITH-2 (`kwargs` nesting), LANGSMITH-3 (volume risk — `run.completed` in ALWAYS_DROP), INTEGRATION-5 (deterministic `condense()` using `kwargs["name"]` not `webhook_sent_at`).
+**Operator instruction:** Direct operators to configure LangSmith's custom header feature to send `X-LangSmith-Token: <secret>`. Query-param auth (`?token=...`) is not recommended because the existing `_process_webhook` route architecture does not pass query params to `verify_signature`.
+
+### Phase 4: Amplitude Adapter
+
+**Rationale:** Most complex adapter: dual payload shapes (monitor alert and cohort membership), no auth signature, and the `what_happened` string-not-struct pitfall. Building it last means the infrastructure is proven and the test pattern is established.
+**Delivers:** `AmplitudeAdapter` with `monitor.alert` and `cohort.membership` event types; `verify_signature` permanent passthrough with documented limitation; pre-filter `project_id` scoping (PostHog-style single-ID equality); Amplitude wizard section that explicitly notes Amplitude does not sign webhooks; `cohort.membership` in `ALWAYS_DROP` by default with documentation to remove if SOUL.md explicitly needs it.
+**Avoids:** AMPLITUDE-1 (`verify_signature` passthrough — always returns `True`), AMPLITUDE-2 (`charts` array envelope — access `payload.get("charts", [])`, handle empty array), AMPLITUDE-3 (`what_happened` stored verbatim, not parsed for structured numerics).
+**Note for `require_signatures` guard:** Amplitude should be excluded from the require_signatures enforcement because it cannot provide signatures. Add a `gateway doctor` warning when `GATEWAY_REQUIRE_SIGNATURES=true` and an Amplitude secret is configured — the configured secret has no security effect.
 
 ### Phase Ordering Rationale
 
-- Click group wiring is a single prerequisite that unblocks both commands — it must come first and be independently verified before any command logic is written
-- Doctor before init because init's value statement ("use `gateway doctor` to verify your configuration") requires doctor to exist and be trusted
-- SOUL.md linter belongs in doctor (Phase 1), not as a separate command — two product gaps close for the price of one
-- Deferred features (`--fix`, `--json`, re-run prefill, SOUL.md template creation) are deliberately excluded from v0.3.0 to keep scope contained
+- Schema must be Phase 1 because `app.py` adapter instantiation and `pre_filter.py` scoping both reference config fields that must exist at import time; schema changes are additive and do not affect existing behavior.
+- PostHog wizard belongs in Phase 1 (not its own phase) because it touches only `init.py` and `test_init.py` — no overlap with any adapter file — and resolves a CARRY-1 debt.
+- Braintrust before LangSmith because the `organization/project/automation/details` envelope is a cleaner template for establishing the fixture-first workflow before tackling `kwargs` nesting.
+- LangSmith before Amplitude because LangSmith's payload is better documented and its auth model, while unusual, is simpler than Amplitude's no-auth-at-all combined with dual payload shapes.
+- The `require_signatures` PostHog carry-forward (CARRY-1) is fixed in Phase 1 to prevent the gap from continuing to widen.
 
 ### Research Flags
 
-Phases with standard patterns (no additional research needed):
-- **Phase 1 (doctor):** Click group pattern, CliRunner testing, rich output formatting — all well-documented with stable APIs. The check list is defined by v0.2.0 known failure modes already documented in CLAUDE.md.
-- **Phase 2 (init):** questionary wizard pattern is well-documented. The main design question (Linear UUID UX) is answered by CRITICAL-5 in PITFALLS.md — instruction block + inline UUID validation + re-prompt on failure.
+Pre-build verification steps required (not full research phases):
+- **Phase 2 (Braintrust):** Verify exact HMAC signature header name from `braintrust.dev/docs/guides/automations` before writing `verify_signature`. This is a single URL lookup.
+- **Phase 3 (LangSmith):** Verify alert webhook and fleet webhook payload shapes match the FEATURES.md documentation before writing fixtures. The automation rule payload is confirmed; the alert shape needs one docs check against `docs.langchain.com/langsmith/alerts-webhook`.
 
-No phases require `/gsd:research-phase` during planning. Research is complete for both commands.
+Phases with standard patterns (no research needed):
+- **Phase 1 (Schema + PostHog wizard):** Pure codebase work following the existing WatchConfig and wizard section patterns exactly.
+- **Phase 4 (Amplitude):** Payload structure confirmed from multiple community sources; no-HMAC auth confirmed by Amplitude engineering. Fully specifiable from research.
 
 ---
 
@@ -149,69 +158,51 @@ No phases require `/gsd:research-phase` during planning. Research is complete fo
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Click 8.3.1 confirmed installed; rich, questionary, python-dotenv all verified against official docs and current PyPI versions; all rationale grounded in direct codebase inspection |
-| Features | HIGH | All prior art (npm doctor, expo doctor, react-native doctor, fly launch, AlgoKit init) directly inspected; feature list grounded in v0.2.0 known failure modes |
-| Architecture | HIGH | Codebase read directly; Click group pattern confirmed against official docs; build order derived from actual dependency constraints in pyproject.toml |
-| Pitfalls | HIGH | CRITICAL-1 through CRITICAL-5 grounded in actual v0.2.0 regressions (BaseSettings bug, dedup fingerprint bug) and real-world CLI issues (gemini-cli #18692, Claude Code #5563, Click TTY issue #906) |
+| Stack | HIGH | No new dependencies; existing stack confirmed sufficient via direct codebase read |
+| Features | MEDIUM | Braintrust and LangSmith payload shapes confirmed from official docs; Amplitude monitor payload from community examples; cohort payload from official docs; Braintrust signature header LOW confidence |
+| Architecture | HIGH | Codebase read directly by Architecture researcher; integration points fully specified; no structural pipeline changes needed |
+| Pitfalls | MEDIUM-HIGH | Most pitfalls grounded in codebase evidence (v0.2.0 BaseSettings regression, dedup bug d36ca0c, test patterns); Braintrust header name and LangSmith auth mechanism are LOW confidence pending live verification |
 
-**Overall confidence:** HIGH
+**Overall confidence:** MEDIUM-HIGH for Braintrust and LangSmith; MEDIUM for Amplitude; HIGH for architecture and stack.
 
 ### Gaps to Address
 
-- **Re-run prefill complexity:** Loading and merging existing `.env` values before prompting is marked HIGH complexity and deferred. If user demand materializes post-launch, this is the right next addition to `gateway init` — the data structure to support it (in-memory dict of existing values) should be designed now even if the feature ships later.
-- **`--fix` flag scope:** Research recommends limiting `--fix` to safe filesystem operations (creating missing directories). The exact set of checks where `--fix` is appropriate should be decided during Phase 1 implementation, not before. Err on the side of not auto-fixing.
-- **questionary behavior in tmux/screen:** PITFALLS.md documents that TTY detection may behave differently inside `tmux` or `screen`. The `sys.stdin.isatty()` check is the correct approach, but edge cases may surface on first real deployment. Document as a known edge case and add a troubleshooting note to the README.
+- **Braintrust HMAC header name (blocker for Phase 2):** The exact header name for the HMAC signature is not confirmed. Must be looked up at `braintrust.dev/docs/guides/automations` before writing `verify_signature`. Do not guess. If the header cannot be confirmed, implement as passthrough with a TODO comment.
 
----
+- **LangSmith fleet and alert webhook payloads (verify before Phase 3 fixtures):** The automation rule payload is confirmed. Fleet webhook and alert webhook shapes need one verification check against `docs.langchain.com/langsmith/fleet/webhooks` and `docs.langchain.com/langsmith/alerts-webhook` before writing test fixtures.
 
-## Cross-Cutting Theme Summary
+- **LangSmith dataset change webhooks — confirmed gap against user expectation:** Research from two independent researchers found no evidence that LangSmith exposes dataset changes as webhook events. GitHub issue langsmith-sdk#1516 ("Prompt Management Webhooks") suggests this feature set is still being expanded. This expectation should be flagged to the operator: dataset change notifications are not achievable via LangSmith webhooks as of 2026-03-31.
 
-These seven themes emerged consistently across all four research files and represent the highest-leverage design decisions for v0.3.0:
-
-1. **Wire `cli.py` first.** Click is available as a transitive dependency but not declared. The Click group is the prerequisite for everything else. Build it before writing a single line of doctor or init logic.
-
-2. **SOUL.md linter folds into doctor.** PG-3 is not a separate command — it is a check inside `gateway doctor`. SOUL.md content validation (warn on UUID patterns, warn on scoping keywords) belongs in the `[Files]` check group. Two product gaps close for the price of one.
-
-3. **The Linear UUID problem is the highest UX risk in gateway init.** Solve it at design time: show a framed instruction block before asking for UUIDs, validate UUID v4 format with regex, re-prompt on failure. Do not discover this during implementation.
-
-4. **Shallow checks are the dominant failure mode for doctor commands.** Every check needs a `fix_hint` field and must validate values, not just presence. `ANTHROPIC_API_KEY` must start with `sk-ant-`. `PROJECT_IDS` must parse as JSON array of valid UUIDs. `WORKSPACE_PATH` must pass `os.access(path, os.W_OK)`.
-
-5. **gateway init re-run must default to merge with backup.** Silent overwrite destroys HMAC secrets that cannot be recovered. Merge-by-default + timestamped backup is required behavior, not an enhancement.
-
-6. **TTY detection is required.** Target users deploy over SSH on a VPS. `sys.stdin.isatty()` must be checked at `gateway init` startup. Exit cleanly with a clear message if False — do not attempt a non-interactive fallback.
-
-7. **Tests must use `monkeypatch.setenv`, not mocked `GatewayConfig`.** Mocking `GatewayConfig` bypasses the `BaseModel`/`BaseSettings` constraint that caused the v0.2.0 security regression. At least one integration-level test per doctor check must load config from actual env vars to catch regressions on this constraint.
+- **Amplitude `require_signatures` behavior decision:** When `config.watch.amplitude.secret` is set but Amplitude sends no signature, `verify_signature` must still return `True` (not `False`) to avoid breaking all incoming Amplitude events. The configured secret has no security effect. Recommendation: always return `True` for Amplitude regardless of config; add a `gateway doctor` warning when a secret is configured for Amplitude under `require_signatures=true`. Decide this explicitly before coding.
 
 ---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Click 8.3.x official documentation — groups, testing, entry points
-- Rich documentation (v14.3.3) — Console, Table, Panel output formatting
-- Questionary documentation (v2.1.1) — wizard prompt types, validate parameter
-- python-dotenv `dotenv_values` API — official PyPI docs
-- npm doctor — official npm docs
-- React Native doctor — official React Native blog post
-- expo doctor PR #34729 — "show only failing checks by default" design decision
-- WP-CLI doctor — official docs and handbook
-- Fly Launch — official Fly.io docs
-- AlgoKit init v2 architecture decision record (2024) — bidirectional query design, jargon-free prompts
-- CLIG (Command Line Interface Guidelines) — clig.dev authoritative reference
-- heartbeat-gateway codebase — CLAUDE.md, schema.py, pyproject.toml read directly
-- uv run pip show click — confirmed Click 8.3.1 installed as transitive dep
+- Heartbeat-gateway codebase (direct read) — `adapters/posthog.py`, `adapters/linear.py`, `app.py`, `pre_filter.py`, `config/schema.py`, `tests/cli/test_init.py`, `CLAUDE.md`
+- Braintrust automations docs: https://www.braintrust.dev/docs/guides/automations — payload structure, `is_test` field, test delivery behavior
+- LangSmith webhooks: https://docs.langchain.com/langsmith/webhooks — automation rule payload confirmed
+- LangSmith alerts webhook: https://docs.langchain.com/langsmith/alerts-webhook — alert payload fields confirmed
+- LangSmith run rules: https://docs.smith.langchain.com/observability/how_to_guides/rules — confirmed
+- Amplitude community (no signing): https://community.amplitude.com/data-instrumentation-57/security-webhook-for-custom-monitors-1506 — confirmed by Amplitude engineering
+- Arize Phoenix GitHub: https://github.com/Arize-ai/phoenix — confirmed no outbound webhooks in OSS product
 
 ### Secondary (MEDIUM confidence)
-- gh auth status exit code issues — GitHub CLI #8845, #9326 — pattern validation for exit code discipline
-- Make "app init" idempotent — AWS copilot-cli #552 — pattern validation for re-run safety
-- gemini-cli doctor issue #18692 — real-world evidence for fix-hint requirement
-- Claude Code doctor issue #5563 — "show specific JSON parsing errors" — generic errors not actionable
-- Click non-TTY issues — pallets/click #906 — TTY detection behavior
-- Linear UUID discovery — Linear Docs, Cmd+K "Copy model UUID" path
-- pytest mocking anti-patterns — pytest-with-eric — over-mocking pitfall documentation
-- Flutter Doctor design — structured output pattern with fix hints
-- UX patterns for CLI tools — Lucas F. Costa (practitioner post, widely cited)
+- Amplitude custom monitor webhook docs: https://amplitude.com/docs/admin/account-management/webhooks — monitor alert payload shape
+- Amplitude cohort webhooks: https://amplitude.com/docs/data/destination-catalog/cohort-webhooks — cohort payload (HIGH confidence for this source)
+- Amplitude community (payload fields): https://community.amplitude.com/data-instrumentation-57/getting-user-segment-labels-in-custom-monitor-webhook-1507
+- LangSmith use-webhooks: https://docs.langchain.com/langsmith/use-webhooks — static header auth model, `kwargs` wrapper
+- LangSmith changelog: https://changelog.langchain.com/announcements/set-up-webhook-notifications-for-run-rules — run rule webhook confirmed
+- Braintrust alerts docs: https://www.braintrust.dev/docs/admin/automations/alerts — `environment_update` payload shape
+
+### Tertiary (LOW confidence — needs live verification)
+- Braintrust HMAC announcement: https://www.usebraintrust.com/air-release-notes (July 22, 2025) — confirms HMAC-SHA256 exists; header name unconfirmed
+- Arize AX alerting integrations: https://arize.com/docs/ax/observe/production-monitoring/alerting-integrations — AX (not Phoenix OSS) webhook support; separate product, out of scope
+- LangSmith langsmith-sdk GitHub issue #1516 — dataset/prompt management webhooks not yet available
 
 ---
-*Research completed: 2026-03-25*
+
+*Research completed: 2026-03-31*
 *Ready for roadmap: yes*
+*Scope correction: Arize Phoenix deferred — OSS product confirmed no outbound webhook support. v0.4.0 scope is Amplitude + Braintrust + LangSmith adapters + PostHog wizard section only.*
