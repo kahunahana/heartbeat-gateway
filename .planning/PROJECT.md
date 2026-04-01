@@ -8,6 +8,17 @@ heartbeat-gateway is an open-source webhook gateway that replaces cron polling f
 
 A developer can deploy heartbeat-gateway and have their AI agents receiving real-time, classified webhook events — instead of paying $86/month to poll for nothing — within 20 minutes.
 
+## Current Milestone: v0.4.0 Adapter Expansion
+
+**Goal:** Add Amplitude, Braintrust, Arize Phoenix, and LangSmith adapters; add PostHog section to `gateway init` wizard. Operators running AI agent stacks can classify signals from LLM eval, observability, and analytics platforms alongside Linear and GitHub.
+
+**Target features:**
+- Amplitude adapter (product analytics signals → ACTIONABLE/DELTA)
+- Braintrust adapter (eval run failures, trace anomalies, human feedback, dataset changes)
+- Arize Phoenix adapter (trace anomalies, eval failures, monitor alerts)
+- LangSmith adapter (run failures, feedback annotations, dataset changes)
+- PostHog `gateway init` wizard section (project_id + secret prompts)
+
 ## Requirements
 
 ### Validated
@@ -21,19 +32,23 @@ A developer can deploy heartbeat-gateway and have their AI agents receiving real
 - ✓ MCP server (read_heartbeat, read_delta, get_gateway_status, read_soul) — v0.2.0
 - ✓ VPS deployment via systemd + Cloudflare tunnel — v0.2.0
 - ✓ 134 passing tests, 1 intentional xfail — v0.2.0
+- ✓ `gateway doctor` — pre-flight config validator — v0.3.0
+- ✓ `gateway init` — interactive setup wizard (Linear + GitHub) — v0.3.0
 
 ### Active
 
-- [ ] `gateway doctor` — pre-flight config validator that catches all known silent failure modes before first webhook
-- [ ] `gateway init` — interactive setup CLI that guides users through `.env` configuration without requiring knowledge of Linear UUID formats or JSON syntax
+- [ ] Amplitude adapter — webhook ingestion, HMAC, normalize, classify, tests, init wizard section
+- [ ] Braintrust adapter — eval failures, trace anomalies, human feedback, dataset changes
+- [ ] Arize Phoenix adapter — trace anomalies, eval failures, monitor alerts
+- [ ] LangSmith adapter — run failures, feedback annotations, dataset changes
+- [ ] PostHog `gateway init` section — project_id + secret prompts
 
 ### Out of Scope
 
-- PostHog adapter (new source) — deferred to v0.3.0+ pending user feedback on whether demand exists
 - Slack / PagerDuty / Sentry adapters — deferred; adapter interface is ready but demand unvalidated
 - Web UI / dashboard — not aligned with markdown-as-API philosophy
 - Multi-tenant / SaaS hosting — single-operator tool by design
-- `gateway init` wizard for PostHog — deferred until PostHog adapter ships
+- Batch/streaming ingestion (non-webhook) — Amplitude Data Export, LangSmith bulk export — webhook-first is the design constraint
 
 ## Context
 
@@ -64,4 +79,4 @@ A developer can deploy heartbeat-gateway and have their AI agents receiving real
 | Plan doctor + wizard together | Complete onboarding story; doctor alone is only half the answer | — Pending |
 
 ---
-*Last updated: 2026-03-25 after GSD initialization*
+*Last updated: 2026-04-01 after v0.4.0 milestone start*
