@@ -25,7 +25,10 @@
   2. `gateway init` prompts for PostHog `project_id` and `secret` before the Linear section — a user running the wizard sees PostHog prompts in sequence
   3. All three new `*WatchConfig` classes inherit `BaseModel` (not `BaseSettings`) — the v0.2.0 security regression cannot recur
   4. `tests/cli/test_init.py` `_HAPPY_PATH_ANSWERS` updated to include PostHog answers — wizard tests pass without modification to answer count
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 03-01-PLAN.md — Add AmplitudeWatchConfig, BraintrustWatchConfig, LangSmithWatchConfig to schema.py + regression tests
+- [ ] 03-02-PLAN.md — Refactor gateway init with adapter checkbox + PostHog wizard section
 
 ### Phase 4: Braintrust Adapter
 **Goal**: A Braintrust automation webhook arrives at `/webhooks/braintrust`, passes HMAC verification, and produces a classified HEARTBEAT.md or DELTA.md entry — or is correctly suppressed for test deliveries and unrecognized events.
