@@ -16,6 +16,7 @@ import tomllib
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
 from click.testing import CliRunner
 
 from heartbeat_gateway.cli import cli
@@ -27,6 +28,7 @@ from heartbeat_gateway.cli import cli
 _TTY_PATCH = "heartbeat_gateway.commands.init._is_tty"
 _QUESTIONARY_TEXT = "heartbeat_gateway.commands.init.questionary.text"
 _QUESTIONARY_PASSWORD = "heartbeat_gateway.commands.init.questionary.password"
+_QUESTIONARY_CHECKBOX = "heartbeat_gateway.commands.init.questionary.checkbox"
 
 
 def _make_question(value):
@@ -36,12 +38,17 @@ def _make_question(value):
     return q
 
 
-def _make_questionary_mocks(monkeypatch, answers: list):
+def _make_questionary_mocks(monkeypatch, answers: list, checkbox_answer: list | None = None):
     """
-    Patch questionary.text and questionary.password in init.py to return
-    answers from `answers` list in order. Validation callbacks are respected.
+    Patch questionary.text, questionary.password, and questionary.checkbox in init.py.
+    - checkbox_answer: list[str] returned by the checkbox prompt (default: all adapters)
+    - answers: list of str consumed in order by text/password prompts
     """
+    _checkbox_val = checkbox_answer if checkbox_answer is not None else ["PostHog", "Linear", "GitHub"]
     answer_iter = iter(answers)
+
+    def mock_checkbox(message, choices, **kwargs):
+        return _make_question(_checkbox_val)
 
     def mock_text(message, default="", validate=None):
         val = next(answer_iter, default or "")
@@ -60,29 +67,85 @@ def _make_questionary_mocks(monkeypatch, answers: list):
                 raise ValueError(f"Validation failed: {result}")
         return _make_question(val)
 
+    monkeypatch.setattr(_QUESTIONARY_CHECKBOX, mock_checkbox)
     monkeypatch.setattr(_QUESTIONARY_TEXT, mock_text)
     monkeypatch.setattr(_QUESTIONARY_PASSWORD, mock_password)
 
 
-# Prompt order in init.py (8 prompts total):
-#   1. ANTHROPIC_API_KEY      (password)
-#   2. GATEWAY_WORKSPACE_PATH (text)
-#   3. GATEWAY_SOUL_MD_PATH   (text)
-#   4. GATEWAY_LLM_MODEL      (text)
-#   5. LINEAR_SECRET          (password)
-#   6. LINEAR_PROJECT_IDS     (text, UUID validate)
-#   7. GITHUB_SECRET          (password)
-#   8. GITHUB_REPOS           (text)
+# Prompt order in init.py after refactor (text/password only — checkbox handled separately):
+# Checkbox is handled via checkbox_answer parameter in _make_questionary_mocks.
+# Default checkbox_answer = ["PostHog", "Linear", "GitHub"] (all 3 selected).
+#
+#   1. ANTHROPIC_API_KEY           (password)
+#   2. GATEWAY_WORKSPACE_PATH      (text)
+#   3. GATEWAY_SOUL_MD_PATH        (text)
+#   4. GATEWAY_LLM_MODEL           (text)
+#   5. POSTHOG_PROJECT_ID          (text)   <- new
+#   6. POSTHOG_SECRET              (password) <- new
+#   7. LINEAR_SECRET               (password)
+#   8. LINEAR_PROJECT_IDS          (text, UUID validate)
+#   9. GITHUB_SECRET               (password)
+#  10. GITHUB_REPOS                (text)
 _HAPPY_PATH_ANSWERS = [
-    "sk-ant-testkey",  # 1. ANTHROPIC_API_KEY
-    "/workspace",  # 2. GATEWAY_WORKSPACE_PATH
-    "/workspace/SOUL.md",  # 3. GATEWAY_SOUL_MD_PATH
-    "claude-haiku-4-5-20251001",  # 4. GATEWAY_LLM_MODEL
-    "my-linear-secret",  # 5. LINEAR_SECRET
-    "550e8400-e29b-41d4-a716-446655440000",  # 6. LINEAR_PROJECT_IDS (valid UUID)
-    "my-github-secret",  # 7. GITHUB_SECRET
-    "owner/repo",  # 8. GITHUB_REPOS
+    "sk-ant-testkey",                         # 1. ANTHROPIC_API_KEY
+    "/workspace",                             # 2. GATEWAY_WORKSPACE_PATH
+    "/workspace/SOUL.md",                    # 3. GATEWAY_SOUL_MD_PATH
+    "claude-haiku-4-5-20251001",             # 4. GATEWAY_LLM_MODEL
+    "ph-project-id-123",                     # 5. POSTHOG_PROJECT_ID
+    "phc_secret",                            # 6. POSTHOG_SECRET
+    "my-linear-secret",                      # 7. LINEAR_SECRET
+    "550e8400-e29b-41d4-a716-446655440000",  # 8. LINEAR_PROJECT_IDS (valid UUID)
+    "my-github-secret",                      # 9. GITHUB_SECRET
+    "owner/repo",                            # 10. GITHUB_REPOS
 ]
+
+
+def test_posthog_prompts_before_linear(monkeypatch, tmp_path):
+    """FOUND-04: PostHog .env entries written before Linear entries when both selected."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(monkeypatch, _HAPPY_PATH_ANSWERS)
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    from dotenv import dotenv_values
+
+    env = dotenv_values(tmp_path / ".env")
+    assert "GATEWAY_WATCH__POSTHOG__SECRET" in env
+    assert "GATEWAY_WATCH__LINEAR__SECRET" in env
+    # Verify PostHog value is the one we provided
+    assert env["GATEWAY_WATCH__POSTHOG__SECRET"] == "phc_secret"
+
+
+def test_checkbox_gates_adapters(monkeypatch, tmp_path):
+    """FOUND-04: Selecting only GitHub produces no Linear or PostHog .env entries."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    # Only GitHub selected — answers list covers only GitHub prompts (after core config)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",            # 1. ANTHROPIC_API_KEY
+            "/workspace",               # 2. GATEWAY_WORKSPACE_PATH
+            "/workspace/SOUL.md",      # 3. GATEWAY_SOUL_MD_PATH
+            "claude-haiku-4-5-20251001",  # 4. GATEWAY_LLM_MODEL
+            # PostHog: skipped (not in selected_adapters)
+            # Linear: skipped (not in selected_adapters)
+            "my-github-secret",         # 5. GITHUB_SECRET
+            "owner/repo",               # 6. GITHUB_REPOS
+        ],
+        checkbox_answer=["GitHub"],  # Only GitHub
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    from dotenv import dotenv_values
+
+    env = dotenv_values(tmp_path / ".env")
+    assert "GATEWAY_WATCH__GITHUB__SECRET" in env
+    assert "GATEWAY_WATCH__LINEAR__SECRET" not in env
+    assert "GATEWAY_WATCH__POSTHOG__SECRET" not in env
+    assert "GATEWAY_WATCH__POSTHOG__PROJECT_ID" not in env
 
 
 # ---------------------------------------------------------------------------
@@ -129,6 +192,8 @@ def test_uuid_validation_reprompts(monkeypatch, tmp_path):
             "/workspace",
             "/workspace/SOUL.md",
             "claude-haiku-4-5-20251001",
+            "ph-project-id-123",  # POSTHOG_PROJECT_ID
+            "phc_secret",         # POSTHOG_SECRET
             "my-linear-secret",
             valid_uuid,
             "my-github-secret",
@@ -154,7 +219,9 @@ def test_secret_not_in_output(monkeypatch, tmp_path):
             "/workspace",
             "/workspace/SOUL.md",
             "claude-haiku-4-5-20251001",
-            secret_value,
+            "ph-project-id-123",  # POSTHOG_PROJECT_ID
+            "phc_secret",         # POSTHOG_SECRET
+            secret_value,         # LINEAR_SECRET
             "550e8400-e29b-41d4-a716-446655440000",
             "my-github-secret",
             "owner/repo",

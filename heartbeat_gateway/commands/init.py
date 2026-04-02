@@ -113,53 +113,86 @@ def init() -> None:
     if llm_model.strip():
         answers["GATEWAY_LLM_MODEL"] = llm_model.strip()
 
-    # --- Section 2: Linear adapter ---
-    # INIT-02: Print UUID discovery instructions before UUID prompt
+    # --- Adapter selection ---
     click.echo("")
-    click.echo("  Linear project UUID")
-    click.echo("  Find it in Linear: press Cmd+K (or Ctrl+K),")
-    click.echo("  search 'Copy model UUID', then paste. Leave blank to skip.")
-    click.echo("")
-
-    # GATEWAY_WATCH__LINEAR__SECRET (INIT-04: masked)
-    linear_secret = questionary.password(
-        "Linear webhook secret (leave blank to skip Linear):",
+    selected_adapters = questionary.checkbox(
+        "Which adapters do you want to configure?",
+        choices=["PostHog", "Linear", "GitHub"],
     ).ask()
-    if linear_secret is None:
+    if selected_adapters is None:
         raise SystemExit(1)
-    if linear_secret.strip():
-        answers["GATEWAY_WATCH__LINEAR__SECRET"] = linear_secret.strip()
 
-    # GATEWAY_WATCH__LINEAR__PROJECT_IDS (INIT-03: UUID validation with re-prompt)
-    linear_uuid = questionary.text(
-        "Linear project UUID (leave blank to skip):",
-        validate=_validate_linear_uuid,
-    ).ask()
-    if linear_uuid is None:
-        raise SystemExit(1)
-    if linear_uuid.strip():
-        answers["GATEWAY_WATCH__LINEAR__PROJECT_IDS"] = json.dumps([linear_uuid.strip()])
+    click.echo(
+        "  Don't see your adapter? "
+        "https://github.com/kahunahana/heartbeat-gateway/blob/main/docs/adapters.md#adding-a-new-adapter"
+    )
 
-    # --- Section 3: GitHub adapter ---
-    click.echo("")
+    # --- Section 2: PostHog adapter ---
+    if "PostHog" in selected_adapters:
+        click.echo("")
 
-    # GATEWAY_WATCH__GITHUB__SECRET (INIT-04: masked)
-    github_secret = questionary.password(
-        "GitHub webhook secret (leave blank to skip GitHub):",
-    ).ask()
-    if github_secret is None:
-        raise SystemExit(1)
-    if github_secret.strip():
-        answers["GATEWAY_WATCH__GITHUB__SECRET"] = github_secret.strip()
+        posthog_project_id = questionary.text(
+            "PostHog project ID (leave blank to skip):",
+            default=existing.get("GATEWAY_WATCH__POSTHOG__PROJECT_ID", ""),
+        ).ask()
+        if posthog_project_id is None:
+            raise SystemExit(1)
+        if posthog_project_id.strip():
+            answers["GATEWAY_WATCH__POSTHOG__PROJECT_ID"] = posthog_project_id.strip()
 
-    # GATEWAY_WATCH__GITHUB__REPOS
-    github_repos = questionary.text(
-        "GitHub repos to watch, e.g. owner/repo (leave blank to skip):",
-    ).ask()
-    if github_repos is None:
-        raise SystemExit(1)
-    if github_repos.strip():
-        answers["GATEWAY_WATCH__GITHUB__REPOS"] = json.dumps([github_repos.strip()])
+        posthog_secret = questionary.password(
+            "PostHog webhook secret (leave blank to skip):",
+        ).ask()
+        if posthog_secret is None:
+            raise SystemExit(1)
+        if posthog_secret.strip():
+            answers["GATEWAY_WATCH__POSTHOG__SECRET"] = posthog_secret.strip()
+
+    # --- Section 3: Linear adapter ---
+    if "Linear" in selected_adapters:
+        # INIT-02: Print UUID discovery instructions before UUID prompt
+        click.echo("")
+        click.echo("  Linear project UUID")
+        click.echo("  Find it in Linear: press Cmd+K (or Ctrl+K),")
+        click.echo("  search 'Copy model UUID', then paste. Leave blank to skip.")
+        click.echo("")
+
+        linear_secret = questionary.password(
+            "Linear webhook secret (leave blank to skip Linear):",
+        ).ask()
+        if linear_secret is None:
+            raise SystemExit(1)
+        if linear_secret.strip():
+            answers["GATEWAY_WATCH__LINEAR__SECRET"] = linear_secret.strip()
+
+        linear_uuid = questionary.text(
+            "Linear project UUID (leave blank to skip):",
+            validate=_validate_linear_uuid,
+        ).ask()
+        if linear_uuid is None:
+            raise SystemExit(1)
+        if linear_uuid.strip():
+            answers["GATEWAY_WATCH__LINEAR__PROJECT_IDS"] = json.dumps([linear_uuid.strip()])
+
+    # --- Section 4: GitHub adapter ---
+    if "GitHub" in selected_adapters:
+        click.echo("")
+
+        github_secret = questionary.password(
+            "GitHub webhook secret (leave blank to skip GitHub):",
+        ).ask()
+        if github_secret is None:
+            raise SystemExit(1)
+        if github_secret.strip():
+            answers["GATEWAY_WATCH__GITHUB__SECRET"] = github_secret.strip()
+
+        github_repos = questionary.text(
+            "GitHub repos to watch, e.g. owner/repo (leave blank to skip):",
+        ).ask()
+        if github_repos is None:
+            raise SystemExit(1)
+        if github_repos.strip():
+            answers["GATEWAY_WATCH__GITHUB__REPOS"] = json.dumps([github_repos.strip()])
 
     # --- INIT-06: In-memory validation before any disk write ---
     errors = []
