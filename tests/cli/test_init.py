@@ -16,7 +16,6 @@ import tomllib
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import pytest
 from click.testing import CliRunner
 
 from heartbeat_gateway.cli import cli
@@ -87,16 +86,16 @@ def _make_questionary_mocks(monkeypatch, answers: list, checkbox_answer: list | 
 #   9. GITHUB_SECRET               (password)
 #  10. GITHUB_REPOS                (text)
 _HAPPY_PATH_ANSWERS = [
-    "sk-ant-testkey",                         # 1. ANTHROPIC_API_KEY
-    "/workspace",                             # 2. GATEWAY_WORKSPACE_PATH
-    "/workspace/SOUL.md",                    # 3. GATEWAY_SOUL_MD_PATH
-    "claude-haiku-4-5-20251001",             # 4. GATEWAY_LLM_MODEL
-    "ph-project-id-123",                     # 5. POSTHOG_PROJECT_ID
-    "phc_secret",                            # 6. POSTHOG_SECRET
-    "my-linear-secret",                      # 7. LINEAR_SECRET
+    "sk-ant-testkey",  # 1. ANTHROPIC_API_KEY
+    "/workspace",  # 2. GATEWAY_WORKSPACE_PATH
+    "/workspace/SOUL.md",  # 3. GATEWAY_SOUL_MD_PATH
+    "claude-haiku-4-5-20251001",  # 4. GATEWAY_LLM_MODEL
+    "ph-project-id-123",  # 5. POSTHOG_PROJECT_ID
+    "phc_secret",  # 6. POSTHOG_SECRET
+    "my-linear-secret",  # 7. LINEAR_SECRET
     "550e8400-e29b-41d4-a716-446655440000",  # 8. LINEAR_PROJECT_IDS (valid UUID)
-    "my-github-secret",                      # 9. GITHUB_SECRET
-    "owner/repo",                            # 10. GITHUB_REPOS
+    "my-github-secret",  # 9. GITHUB_SECRET
+    "owner/repo",  # 10. GITHUB_REPOS
 ]
 
 
@@ -124,14 +123,14 @@ def test_checkbox_gates_adapters(monkeypatch, tmp_path):
     _make_questionary_mocks(
         monkeypatch,
         answers=[
-            "sk-ant-testkey",            # 1. ANTHROPIC_API_KEY
-            "/workspace",               # 2. GATEWAY_WORKSPACE_PATH
-            "/workspace/SOUL.md",      # 3. GATEWAY_SOUL_MD_PATH
+            "sk-ant-testkey",  # 1. ANTHROPIC_API_KEY
+            "/workspace",  # 2. GATEWAY_WORKSPACE_PATH
+            "/workspace/SOUL.md",  # 3. GATEWAY_SOUL_MD_PATH
             "claude-haiku-4-5-20251001",  # 4. GATEWAY_LLM_MODEL
             # PostHog: skipped (not in selected_adapters)
             # Linear: skipped (not in selected_adapters)
-            "my-github-secret",         # 5. GITHUB_SECRET
-            "owner/repo",               # 6. GITHUB_REPOS
+            "my-github-secret",  # 5. GITHUB_SECRET
+            "owner/repo",  # 6. GITHUB_REPOS
         ],
         checkbox_answer=["GitHub"],  # Only GitHub
     )
@@ -193,7 +192,7 @@ def test_uuid_validation_reprompts(monkeypatch, tmp_path):
             "/workspace/SOUL.md",
             "claude-haiku-4-5-20251001",
             "ph-project-id-123",  # POSTHOG_PROJECT_ID
-            "phc_secret",         # POSTHOG_SECRET
+            "phc_secret",  # POSTHOG_SECRET
             "my-linear-secret",
             valid_uuid,
             "my-github-secret",
@@ -220,8 +219,8 @@ def test_secret_not_in_output(monkeypatch, tmp_path):
             "/workspace/SOUL.md",
             "claude-haiku-4-5-20251001",
             "ph-project-id-123",  # POSTHOG_PROJECT_ID
-            "phc_secret",         # POSTHOG_SECRET
-            secret_value,         # LINEAR_SECRET
+            "phc_secret",  # POSTHOG_SECRET
+            secret_value,  # LINEAR_SECRET
             "550e8400-e29b-41d4-a716-446655440000",
             "my-github-secret",
             "owner/repo",
