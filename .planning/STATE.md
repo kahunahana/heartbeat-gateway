@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: milestone
-status: completed
+status: planning
 stopped_at: Completed 03-02-PLAN.md — PostHog wizard checkbox fix
-last_updated: "2026-04-02T02:53:49.724Z"
+last_updated: "2026-04-02T07:54:42.473Z"
 progress:
   total_phases: 6
   completed_phases: 3
@@ -25,7 +25,7 @@ progress:
 - **Milestone:** v0.4.0 — Adapter Expansion
 - **Phase:** Phase 4 — Braintrust Adapter (next)
 - **Plan:** Plan 03-02 complete; Phase 3 fully done
-- **Status:** Phase 3 complete (2/2 plans); ready for Phase 4
+- **Status:** Ready to plan
 
 ## Progress
 
