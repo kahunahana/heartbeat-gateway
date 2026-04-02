@@ -1,0 +1,16 @@
+{
+  "organization": { "id": "org-abc123", "name": "my-org" },
+  "project": { "id": "proj-def456", "name": "production-eval" },
+  "automation": {
+    "id": "d7e43519-9679-5cgg-0300-9dee67080c78",
+    "name": "Production Environment Changes",
+    "description": "Alert when production environment is updated",
+    "event_type": "environment_update"
+  },
+  "details": {
+    "environment": { "slug": "production" },
+    "prompt": { "id": "prompt-789", "slug": "summarizer" },
+    "new_version": "v3.2.1",
+    "action": "update"
+  }
+}

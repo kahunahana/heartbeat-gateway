@@ -1,0 +1,21 @@
+{
+  "organization": { "id": "org-abc123", "name": "my-org" },
+  "project": { "id": "proj-def456", "name": "production-eval" },
+  "automation": {
+    "id": "c5b32408-8568-4bff-9299-8cdd56979b67",
+    "name": "High-Priority Factuality",
+    "description": "Alert on factuality scores for priority logs",
+    "event_type": "logs",
+    "btql_filter": "metadata.priority = 0 AND scores.Factuality < 0.9",
+    "interval_seconds": 3600,
+    "url": "https://braintrust.dev/app/my-org/p/production-eval/configuration/alerts"
+  },
+  "details": {
+    "is_test": false,
+    "message": "High-Priority Factuality: 5 logs triggered alert in the last 1 hour",
+    "time_start": "2025-05-12T10:00:00.000Z",
+    "time_end": "2025-05-12T11:00:00.000Z",
+    "count": 5,
+    "related_logs_url": "https://braintrust.dev/app/my-org/p/production-eval/logs"
+  }
+}

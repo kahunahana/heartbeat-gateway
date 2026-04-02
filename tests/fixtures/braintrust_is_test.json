@@ -1,0 +1,17 @@
+{
+  "organization": { "id": "org-abc123", "name": "my-org" },
+  "project": { "id": "proj-def456", "name": "production-eval" },
+  "automation": {
+    "id": "c5b32408-8568-4bff-9299-8cdd56979b67",
+    "name": "High-Priority Factuality",
+    "event_type": "logs"
+  },
+  "details": {
+    "is_test": true,
+    "message": "This is a test delivery",
+    "time_start": "2025-05-12T10:00:00.000Z",
+    "time_end": "2025-05-12T11:00:00.000Z",
+    "count": 0,
+    "related_logs_url": ""
+  }
+}
