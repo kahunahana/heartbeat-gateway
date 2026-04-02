@@ -42,7 +42,7 @@ Plans:
   5. `gateway init` prompts for Braintrust secret with BTQL automation setup instructions displayed inline
 **Plans**: 3 plans
 Plans:
-- [ ] 04-01-PLAN.md — Pre-build gate (HMAC header confirm), test stubs + fixtures, BraintrustAdapter implementation
+- [x] 04-01-PLAN.md — Pre-build gate (HMAC header confirm), test stubs + fixtures, BraintrustAdapter implementation
 - [ ] 04-02-PLAN.md — Route registration in app.py, NormalizedEvent Literal update, integration tests
 - [ ] 04-03-PLAN.md — gateway init Braintrust section + wizard tests + docs/adapters.md
 
@@ -78,7 +78,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 3. Schema Foundation + PostHog Wizard | 2/2 | Complete   | 2026-04-02 |
-| 4. Braintrust Adapter | 0/3 | Not started | - |
+| 4. Braintrust Adapter | 1/3 | In progress | - |
 | 5. LangSmith Adapter | 0/? | Not started | - |
 | 6. Amplitude Adapter | 0/? | Not started | - |
 
@@ -92,13 +92,13 @@ Plans:
 | FOUND-02 | Phase 3 | Pending |
 | FOUND-03 | Phase 3 | Pending |
 | FOUND-04 | Phase 3 | Pending |
-| BTST-01 | Phase 4 | Pending |
-| BTST-02 | Phase 4 | Pending |
-| BTST-03 | Phase 4 | Pending |
-| BTST-04 | Phase 4 | Pending |
+| BTST-01 | Phase 4 | Complete (04-01) |
+| BTST-02 | Phase 4 | Complete (04-01) |
+| BTST-03 | Phase 4 | Complete (04-01) |
+| BTST-04 | Phase 4 | Complete (04-01) |
 | BTST-05 | Phase 4 | Pending |
 | BTST-06 | Phase 4 | Pending |
-| BTST-07 | Phase 4 | Pending |
+| BTST-07 | Phase 4 | Complete (04-01) |
 | LSMT-01 | Phase 5 | Pending |
 | LSMT-02 | Phase 5 | Pending |
 | LSMT-03 | Phase 5 | Pending |
