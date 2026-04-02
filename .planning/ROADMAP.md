@@ -40,7 +40,11 @@ Plans:
   3. A Braintrust `environment_update` event produces a DELTA entry with env name and change type visible
   4. A request with an invalid HMAC signature returns 401 — the route is protected
   5. `gateway init` prompts for Braintrust secret with BTQL automation setup instructions displayed inline
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 04-01-PLAN.md — Pre-build gate (HMAC header confirm), test stubs + fixtures, BraintrustAdapter implementation
+- [ ] 04-02-PLAN.md — Route registration in app.py, NormalizedEvent Literal update, integration tests
+- [ ] 04-03-PLAN.md — gateway init Braintrust section + wizard tests + docs/adapters.md
 
 ### Phase 5: LangSmith Adapter
 **Goal**: A LangSmith webhook arrives at `/webhooks/langsmith`, passes custom-header token validation, and produces classified entries for run errors, negative feedback, and alert threshold crossings — while silently dropping clean run completions.
@@ -74,7 +78,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 3. Schema Foundation + PostHog Wizard | 2/2 | Complete   | 2026-04-02 |
-| 4. Braintrust Adapter | 0/? | Not started | - |
+| 4. Braintrust Adapter | 0/3 | Not started | - |
 | 5. LangSmith Adapter | 0/? | Not started | - |
 | 6. Amplitude Adapter | 0/? | Not started | - |
 
