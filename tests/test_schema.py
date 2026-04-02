@@ -2,6 +2,7 @@
 
 CONSTRAINT: monkeypatch.setenv only. Never mock GatewayConfig. Instantiate real GatewayConfig().
 """
+
 from heartbeat_gateway.config.schema import GatewayConfig
 
 
