@@ -118,9 +118,9 @@ def init() -> None:
     selected_adapters = questionary.checkbox(
         "Which adapters do you want to configure?",
         choices=[
-            questionary.Choice("PostHog", checked=True),
-            questionary.Choice("Linear", checked=True),
-            questionary.Choice("GitHub", checked=True),
+            questionary.Choice("PostHog", checked=False),
+            questionary.Choice("Linear", checked=False),
+            questionary.Choice("GitHub", checked=False),
         ],
         instruction="(Space to toggle, Enter to confirm)",
     ).ask()
