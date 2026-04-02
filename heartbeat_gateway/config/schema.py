@@ -29,12 +29,33 @@ class PostHogWatchConfig(BaseModel):
     secret: str = ""
 
 
+class AmplitudeWatchConfig(BaseModel):
+    model_config = {"extra": "ignore"}
+
+    secret: str = ""
+
+
+class BraintrustWatchConfig(BaseModel):
+    model_config = {"extra": "ignore"}
+
+    secret: str = ""
+
+
+class LangSmithWatchConfig(BaseModel):
+    model_config = {"extra": "ignore"}
+
+    token: str = ""  # NOT secret — LangSmith uses token per FOUND-03
+
+
 class WatchConfig(BaseModel):
     model_config = {"extra": "ignore"}
 
     linear: LinearWatchConfig = Field(default_factory=LinearWatchConfig)
     github: GitHubWatchConfig = Field(default_factory=GitHubWatchConfig)
     posthog: PostHogWatchConfig = Field(default_factory=PostHogWatchConfig)
+    amplitude: AmplitudeWatchConfig = Field(default_factory=AmplitudeWatchConfig)
+    braintrust: BraintrustWatchConfig = Field(default_factory=BraintrustWatchConfig)
+    langsmith: LangSmithWatchConfig = Field(default_factory=LangSmithWatchConfig)
 
 
 class GatewayConfig(BaseSettings):
