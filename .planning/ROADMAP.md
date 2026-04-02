@@ -73,7 +73,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 3. Schema Foundation + PostHog Wizard | 0/? | Not started | - |
+| 3. Schema Foundation + PostHog Wizard | 1/2 | In Progress|  |
 | 4. Braintrust Adapter | 0/? | Not started | - |
 | 5. LangSmith Adapter | 0/? | Not started | - |
 | 6. Amplitude Adapter | 0/? | Not started | - |

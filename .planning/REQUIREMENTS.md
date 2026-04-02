@@ -24,9 +24,9 @@
 
 ### Schema & Foundation (FOUND)
 
-- [ ] **FOUND-01**: `WatchConfig` adds `AmplitudeWatchConfig` model — `secret` field (no-op for verification; exists for config symmetry; Amplitude does not sign webhooks)
-- [ ] **FOUND-02**: `WatchConfig` adds `BraintrustWatchConfig` model — `secret` field for HMAC-SHA256 verification
-- [ ] **FOUND-03**: `WatchConfig` adds `LangSmithWatchConfig` model — `token` field for custom header auth (not HMAC)
+- [x] **FOUND-01**: `WatchConfig` adds `AmplitudeWatchConfig` model — `secret` field (no-op for verification; exists for config symmetry; Amplitude does not sign webhooks)
+- [x] **FOUND-02**: `WatchConfig` adds `BraintrustWatchConfig` model — `secret` field for HMAC-SHA256 verification
+- [x] **FOUND-03**: `WatchConfig` adds `LangSmithWatchConfig` model — `token` field for custom header auth (not HMAC)
 - [ ] **FOUND-04**: `gateway init` wizard adds PostHog section — `project_id` + `secret` prompts before Linear section
 
 ### Amplitude Adapter (AMP)
@@ -91,9 +91,9 @@
 ### v0.4.0
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 3 | Pending |
-| FOUND-02 | Phase 3 | Pending |
-| FOUND-03 | Phase 3 | Pending |
+| FOUND-01 | Phase 3 | Complete |
+| FOUND-02 | Phase 3 | Complete |
+| FOUND-03 | Phase 3 | Complete |
 | FOUND-04 | Phase 3 | Pending |
 | BTST-01 | Phase 4 | Pending |
 | BTST-02 | Phase 4 | Pending |
