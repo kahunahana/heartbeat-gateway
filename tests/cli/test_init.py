@@ -284,3 +284,165 @@ def test_wizard_happy_path(monkeypatch, tmp_path):
     result = runner.invoke(cli, ["init"], catch_exceptions=False)
     assert result.exit_code == 0
     assert "gateway doctor" in result.output
+
+
+def test_confirmation_message_multiple_adapters(monkeypatch, tmp_path):
+    """Confirmation message shows count and names when 2+ adapters selected."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",
+            "/workspace",
+            "/workspace/SOUL.md",
+            "claude-haiku-4-5-20251001",
+            "ph-project-id-123",
+            "phc_secret",
+            "my-github-secret",
+            "owner/repo",
+        ],
+        checkbox_answer=["PostHog", "GitHub"],
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    assert "You selected 2 adapters: PostHog, GitHub" in result.output
+    assert "We'll walk through each one now." in result.output
+
+
+def test_confirmation_message_single_adapter(monkeypatch, tmp_path):
+    """Confirmation message uses singular form when exactly 1 adapter selected."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",
+            "/workspace",
+            "/workspace/SOUL.md",
+            "claude-haiku-4-5-20251001",
+            "my-github-secret",
+            "owner/repo",
+        ],
+        checkbox_answer=["GitHub"],
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    assert "You selected 1 adapter: GitHub" in result.output
+    assert "We'll walk through it now." in result.output
+
+
+def test_no_confirmation_message_when_no_adapters(monkeypatch, tmp_path):
+    """No confirmation message is shown when zero adapters are selected."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",
+            "/workspace",
+            "/workspace/SOUL.md",
+            "claude-haiku-4-5-20251001",
+        ],
+        checkbox_answer=[],
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    assert "You selected" not in result.output
+
+
+def test_skip_remaining_prompts_when_first_blank_posthog(monkeypatch, tmp_path):
+    """Leaving PostHog project_id blank skips the secret prompt entirely."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",
+            "/workspace",
+            "/workspace/SOUL.md",
+            "claude-haiku-4-5-20251001",
+            "",  # PostHog project_id blank — should skip secret
+            # No posthog secret provided — would cause StopIteration if prompted
+            "my-linear-secret",
+            "550e8400-e29b-41d4-a716-446655440000",
+            "my-github-secret",
+            "owner/repo",
+        ],
+        checkbox_answer=["PostHog", "Linear", "GitHub"],
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    from dotenv import dotenv_values
+
+    env = dotenv_values(tmp_path / ".env")
+    assert "GATEWAY_WATCH__POSTHOG__PROJECT_ID" not in env
+    assert "GATEWAY_WATCH__POSTHOG__SECRET" not in env
+    # Other adapters still written
+    assert "GATEWAY_WATCH__LINEAR__SECRET" in env
+
+
+def test_skip_remaining_prompts_when_first_blank_linear(monkeypatch, tmp_path):
+    """Leaving Linear secret blank skips the UUID prompt entirely."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",
+            "/workspace",
+            "/workspace/SOUL.md",
+            "claude-haiku-4-5-20251001",
+            "ph-project-id-123",
+            "phc_secret",
+            "",  # Linear secret blank — should skip UUID
+            # No linear UUID provided — would cause StopIteration if prompted
+            "my-github-secret",
+            "owner/repo",
+        ],
+        checkbox_answer=["PostHog", "Linear", "GitHub"],
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    from dotenv import dotenv_values
+
+    env = dotenv_values(tmp_path / ".env")
+    assert "GATEWAY_WATCH__LINEAR__SECRET" not in env
+    assert "GATEWAY_WATCH__LINEAR__PROJECT_IDS" not in env
+    assert "GATEWAY_WATCH__POSTHOG__SECRET" in env
+
+
+def test_skip_remaining_prompts_when_first_blank_github(monkeypatch, tmp_path):
+    """Leaving GitHub secret blank skips the repos prompt entirely."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",
+            "/workspace",
+            "/workspace/SOUL.md",
+            "claude-haiku-4-5-20251001",
+            "ph-project-id-123",
+            "phc_secret",
+            "my-linear-secret",
+            "550e8400-e29b-41d4-a716-446655440000",
+            "",  # GitHub secret blank — should skip repos
+            # No repos provided — would cause StopIteration if prompted
+        ],
+        checkbox_answer=["PostHog", "Linear", "GitHub"],
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    from dotenv import dotenv_values
+
+    env = dotenv_values(tmp_path / ".env")
+    assert "GATEWAY_WATCH__GITHUB__SECRET" not in env
+    assert "GATEWAY_WATCH__GITHUB__REPOS" not in env
+    assert "GATEWAY_WATCH__LINEAR__SECRET" in env

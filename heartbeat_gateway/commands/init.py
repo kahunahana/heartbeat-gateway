@@ -132,6 +132,14 @@ def init() -> None:
         "https://github.com/kahunahana/heartbeat-gateway/blob/main/docs/adapters.md#adding-a-new-adapter"
     )
 
+    if selected_adapters:
+        adapter_list = ", ".join(selected_adapters)
+        if len(selected_adapters) == 1:
+            click.echo(f"\n  You selected 1 adapter: {adapter_list}. We'll walk through it now.")
+        else:
+            n = len(selected_adapters)
+            click.echo(f"\n  You selected {n} adapters: {adapter_list}. We'll walk through each one now.")
+
     # --- Section 2: PostHog adapter ---
     if "PostHog" in selected_adapters:
         click.echo("")
@@ -145,13 +153,13 @@ def init() -> None:
         if posthog_project_id.strip():
             answers["GATEWAY_WATCH__POSTHOG__PROJECT_ID"] = posthog_project_id.strip()
 
-        posthog_secret = questionary.password(
-            "PostHog webhook secret (leave blank to skip):",
-        ).ask()
-        if posthog_secret is None:
-            raise SystemExit(1)
-        if posthog_secret.strip():
-            answers["GATEWAY_WATCH__POSTHOG__SECRET"] = posthog_secret.strip()
+            posthog_secret = questionary.password(
+                "PostHog webhook secret (leave blank to skip):",
+            ).ask()
+            if posthog_secret is None:
+                raise SystemExit(1)
+            if posthog_secret.strip():
+                answers["GATEWAY_WATCH__POSTHOG__SECRET"] = posthog_secret.strip()
 
     # --- Section 3: Linear adapter ---
     if "Linear" in selected_adapters:
@@ -163,41 +171,41 @@ def init() -> None:
         click.echo("")
 
         linear_secret = questionary.password(
-            "Linear webhook secret (leave blank to skip Linear):",
+            "Linear webhook secret (leave blank to skip):",
         ).ask()
         if linear_secret is None:
             raise SystemExit(1)
         if linear_secret.strip():
             answers["GATEWAY_WATCH__LINEAR__SECRET"] = linear_secret.strip()
 
-        linear_uuid = questionary.text(
-            "Linear project UUID (leave blank to skip):",
-            validate=_validate_linear_uuid,
-        ).ask()
-        if linear_uuid is None:
-            raise SystemExit(1)
-        if linear_uuid.strip():
-            answers["GATEWAY_WATCH__LINEAR__PROJECT_IDS"] = json.dumps([linear_uuid.strip()])
+            linear_uuid = questionary.text(
+                "Linear project UUID (leave blank to skip):",
+                validate=_validate_linear_uuid,
+            ).ask()
+            if linear_uuid is None:
+                raise SystemExit(1)
+            if linear_uuid.strip():
+                answers["GATEWAY_WATCH__LINEAR__PROJECT_IDS"] = json.dumps([linear_uuid.strip()])
 
     # --- Section 4: GitHub adapter ---
     if "GitHub" in selected_adapters:
         click.echo("")
 
         github_secret = questionary.password(
-            "GitHub webhook secret (leave blank to skip GitHub):",
+            "GitHub webhook secret (leave blank to skip):",
         ).ask()
         if github_secret is None:
             raise SystemExit(1)
         if github_secret.strip():
             answers["GATEWAY_WATCH__GITHUB__SECRET"] = github_secret.strip()
 
-        github_repos = questionary.text(
-            "GitHub repos to watch, e.g. owner/repo (leave blank to skip):",
-        ).ask()
-        if github_repos is None:
-            raise SystemExit(1)
-        if github_repos.strip():
-            answers["GATEWAY_WATCH__GITHUB__REPOS"] = json.dumps([github_repos.strip()])
+            github_repos = questionary.text(
+                "GitHub repos to watch, e.g. owner/repo (leave blank to skip):",
+            ).ask()
+            if github_repos is None:
+                raise SystemExit(1)
+            if github_repos.strip():
+                answers["GATEWAY_WATCH__GITHUB__REPOS"] = json.dumps([github_repos.strip()])
 
     # --- INIT-06: In-memory validation before any disk write ---
     errors = []
