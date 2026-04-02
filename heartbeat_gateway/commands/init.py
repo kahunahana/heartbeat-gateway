@@ -115,6 +115,7 @@ def init() -> None:
 
     # --- Adapter selection ---
     click.echo("")
+    click.echo("  (Use Space to select adapters, Enter to confirm)")
     selected_adapters = questionary.checkbox(
         "Which adapters do you want to configure?",
         choices=[
