@@ -117,7 +117,12 @@ def init() -> None:
     click.echo("")
     selected_adapters = questionary.checkbox(
         "Which adapters do you want to configure?",
-        choices=["PostHog", "Linear", "GitHub"],
+        choices=[
+            questionary.Choice("PostHog", checked=True),
+            questionary.Choice("Linear", checked=True),
+            questionary.Choice("GitHub", checked=True),
+        ],
+        instruction="(Space to toggle, Enter to confirm)",
     ).ask()
     if selected_adapters is None:
         raise SystemExit(1)
