@@ -45,7 +45,7 @@
 - [ ] **BTST-02**: `normalize()` returns `None` as its **first action** when `payload.get("details", {}).get("is_test") == True` — prevents phantom HEARTBEAT entries on every automation save
 - [ ] **BTST-03**: Normalizes `logs` events with failing scores (BTQL-filtered automations) — score name, value, project name → ACTIONABLE
 - [ ] **BTST-04**: Normalizes `environment_update` events — env name, change type → DELTA
-- [ ] **BTST-05**: `/webhooks/braintrust` route wired in `app.py`; `BraintrustAdapter` registered; pre-filter integration
+- [x] **BTST-05**: `/webhooks/braintrust` route wired in `app.py`; `BraintrustAdapter` registered; pre-filter integration
 - [ ] **BTST-06**: `gateway init` includes Braintrust section — secret prompt + BTQL automation setup instructions
 - [ ] **BTST-07**: Unit tests (verify HMAC, is_test→None, logs normalize, env_update normalize, unknown→None) + fixture JSON + `docs/adapters.md` updated
 
@@ -99,7 +99,7 @@
 | BTST-02 | Phase 4 | Pending |
 | BTST-03 | Phase 4 | Pending |
 | BTST-04 | Phase 4 | Pending |
-| BTST-05 | Phase 4 | Pending |
+| BTST-05 | Phase 4 | Complete (04-02) |
 | BTST-06 | Phase 4 | Pending |
 | BTST-07 | Phase 4 | Pending |
 | LSMT-01 | Phase 5 | Pending |

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: milestone
 status: planning
-stopped_at: Completed 04-01-PLAN.md — BraintrustAdapter implementation
-last_updated: "2026-04-02T08:30:00.000Z"
+stopped_at: Completed 04-02-PLAN.md — BraintrustAdapter route registration
+last_updated: "2026-04-02T15:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 8
+  completed_plans: 8
 ---
 
 # STATE.md — heartbeat-gateway
@@ -18,27 +18,28 @@ progress:
 
 **What:** heartbeat-gateway v0.4.0 — Amplitude, Braintrust, and LangSmith webhook adapters + PostHog init wizard section
 **Core Value:** Operators running AI agent stacks can classify signals from LLM eval, observability, and analytics platforms alongside Linear and GitHub — within the existing five-stage pipeline, zero structural changes.
-**Current Focus:** Phase 4 Plan 01 complete — BraintrustAdapter implemented; Phase 4 Plans 02-03 (route + wizard) are next
+**Current Focus:** Phase 4 Plan 02 complete — BraintrustAdapter route registered; Phase 4 Plan 03 (wizard section) is next
 
 ## Current Position
 
 - **Milestone:** v0.4.0 — Adapter Expansion
 - **Phase:** Phase 4 — Braintrust Adapter (in progress)
-- **Plan:** Plan 04-01 complete; Plans 04-02 (route) and 04-03 (wizard section) remain
+- **Plan:** Plan 04-02 complete; Plan 04-03 (wizard section) remains
 - **Status:** In progress
 
 ## Progress
 
 ```
-[████████░░] 80% — Phase 4 Plan 01 complete (7/? plans done)
+[████████░░] 83% — Phase 4 Plan 02 complete (8/? plans done)
 Phase 3: Schema Foundation + PostHog Wizard  ✓ Complete (Plans 01-02 done)
-Phase 4: Braintrust Adapter                  ▓ In progress (Plan 01 done; Plans 02-03 remain)
+Phase 4: Braintrust Adapter                  ▓ In progress (Plans 01-02 done; Plan 03 remains)
 Phase 5: LangSmith Adapter                   ░ Not started
 Phase 6: Amplitude Adapter                   ░ Not started
 ```
 
 ## Recent Decisions
 
+- braintrust excluded from require_signatures guard — permanent-passthrough adapters skip secret enforcement with inline comment (04-02)
 - Braintrust verify_signature is permanent passthrough (option-b) — no webhook signing confirmed, docstring advises IP allowlisting (04-01)
 - condense() uses automation name not time/count fields — preserves writer.py dedup determinism (04-01)
 - is_test guard is first executable line in normalize() — BTST-02 constraint enforced (04-01)
@@ -62,11 +63,11 @@ Phase 6: Amplitude Adapter                   ░ Not started
 
 ## Pending Todos
 
-- Execute Phase 4 Plans 02-03 (Braintrust route + wizard section)
+- Execute Phase 4 Plan 03 (Braintrust wizard section)
 - Execute Phase 5 (LangSmith Adapter)
 - Execute Phase 6 (Amplitude Adapter)
 
 ## Session Continuity
 
-Last session: 2026-04-02T08:30:00.000Z
-Stopped at: Completed 04-01-PLAN.md — BraintrustAdapter implementation
+Last session: 2026-04-02T15:00:00.000Z
+Stopped at: Completed 04-02-PLAN.md — BraintrustAdapter route registration

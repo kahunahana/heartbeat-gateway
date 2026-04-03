@@ -43,7 +43,7 @@ Plans:
 **Plans**: 3 plans
 Plans:
 - [x] 04-01-PLAN.md — Pre-build gate (HMAC header confirm), test stubs + fixtures, BraintrustAdapter implementation
-- [ ] 04-02-PLAN.md — Route registration in app.py, NormalizedEvent Literal update, integration tests
+- [x] 04-02-PLAN.md — Route registration in app.py, NormalizedEvent Literal update, integration tests
 - [ ] 04-03-PLAN.md — gateway init Braintrust section + wizard tests + docs/adapters.md
 
 ### Phase 5: LangSmith Adapter
@@ -78,7 +78,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 3. Schema Foundation + PostHog Wizard | 2/2 | Complete   | 2026-04-02 |
-| 4. Braintrust Adapter | 1/3 | In progress | - |
+| 4. Braintrust Adapter | 2/3 | In progress | - |
 | 5. LangSmith Adapter | 0/? | Not started | - |
 | 6. Amplitude Adapter | 0/? | Not started | - |
 
@@ -96,7 +96,7 @@ Plans:
 | BTST-02 | Phase 4 | Complete (04-01) |
 | BTST-03 | Phase 4 | Complete (04-01) |
 | BTST-04 | Phase 4 | Complete (04-01) |
-| BTST-05 | Phase 4 | Pending |
+| BTST-05 | Phase 4 | Complete (04-02) |
 | BTST-06 | Phase 4 | Pending |
 | BTST-07 | Phase 4 | Complete (04-01) |
 | LSMT-01 | Phase 5 | Pending |
