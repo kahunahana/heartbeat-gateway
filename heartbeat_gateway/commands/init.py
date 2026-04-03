@@ -120,6 +120,7 @@ def init() -> None:
         "Which adapters do you want to configure?",
         choices=[
             questionary.Choice("PostHog", checked=False),
+            questionary.Choice("Braintrust", checked=False),
             questionary.Choice("Linear", checked=False),
             questionary.Choice("GitHub", checked=False),
         ],
@@ -162,7 +163,25 @@ def init() -> None:
             if posthog_secret.strip():
                 answers["GATEWAY_WATCH__POSTHOG__SECRET"] = posthog_secret.strip()
 
-    # --- Section 3: Linear adapter ---
+    # --- Section 3: Braintrust adapter ---
+    if "Braintrust" in selected_adapters:
+        click.echo("")
+        click.echo("  Braintrust automation setup")
+        click.echo("  Create an alert automation in Braintrust:")
+        click.echo("  Project → Configuration → Alerts → New Alert")
+        click.echo("  Action: Webhook → URL: <your-gateway>/webhooks/braintrust")
+        click.echo("  Example BTQL filter: metadata.priority = 0 AND scores.Factuality < 0.9")
+        click.echo("")
+
+        braintrust_secret = questionary.password(
+            "Braintrust webhook signing secret (leave blank to skip):",
+        ).ask()
+        if braintrust_secret is None:
+            raise SystemExit(1)
+        if braintrust_secret.strip():
+            answers["GATEWAY_WATCH__BRAINTRUST__SECRET"] = braintrust_secret.strip()
+
+    # --- Section 4: Linear adapter ---
     if "Linear" in selected_adapters:
         # INIT-02: Print UUID discovery instructions before UUID prompt
         click.echo("")
@@ -188,7 +207,7 @@ def init() -> None:
             if linear_uuid.strip():
                 answers["GATEWAY_WATCH__LINEAR__PROJECT_IDS"] = json.dumps([linear_uuid.strip()])
 
-    # --- Section 4: GitHub adapter ---
+    # --- Section 5: GitHub adapter ---
     if "GitHub" in selected_adapters:
         click.echo("")
 
