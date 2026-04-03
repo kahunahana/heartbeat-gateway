@@ -454,12 +454,12 @@ def test_braintrust_section_writes_secret(monkeypatch, tmp_path):
     _make_questionary_mocks(
         monkeypatch,
         answers=[
-            "sk-ant-testkey",            # 1. ANTHROPIC_API_KEY
-            "/workspace",                # 2. GATEWAY_WORKSPACE_PATH
-            "/workspace/SOUL.md",        # 3. GATEWAY_SOUL_MD_PATH
-            "claude-haiku-4-5-20251001", # 4. GATEWAY_LLM_MODEL
+            "sk-ant-testkey",  # 1. ANTHROPIC_API_KEY
+            "/workspace",  # 2. GATEWAY_WORKSPACE_PATH
+            "/workspace/SOUL.md",  # 3. GATEWAY_SOUL_MD_PATH
+            "claude-haiku-4-5-20251001",  # 4. GATEWAY_LLM_MODEL
             # PostHog: skipped
-            "bt-secret-abc123",          # 5. BRAINTRUST_SECRET
+            "bt-secret-abc123",  # 5. BRAINTRUST_SECRET
             # Linear: skipped
             # GitHub: skipped
         ],
