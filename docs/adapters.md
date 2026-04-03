@@ -177,6 +177,50 @@ PostHog: feature flag 'new-checkout' called
 
 ---
 
+## Braintrust
+
+**Webhook URL:** `https://your-gateway.example.com/webhooks/braintrust`
+
+**Purpose:** BTQL-filtered log alerts and environment update events from Braintrust automations.
+
+### Authentication
+
+No signature verification — Braintrust does not sign webhook deliveries as of the build date. IP allowlisting recommended. Restrict `/webhooks/braintrust` to Braintrust IP ranges via firewall rules.
+
+### Setup in Braintrust
+
+1. Navigate to: Project → Configuration → Alerts → **New Alert**
+2. Set Action: **Webhook**, URL: `<your-gateway>/webhooks/braintrust`
+3. Configure a BTQL filter to target the signals you care about
+4. Example BTQL filter: `metadata.priority = 0 AND scores.Factuality < 0.9`
+5. Set `GATEWAY_WATCH__BRAINTRUST__SECRET` in your `.env` (used as a placeholder for future signing support; not currently verified by Braintrust)
+
+### Events Handled
+
+| `event_type`          | Braintrust Trigger |
+|-----------------------|--------------------|
+| `logs`                | BTQL filter matches failing scores. Produces `ACTIONABLE` entry. |
+| `environment_update`  | Prompt environment updated. Produces `DELTA` entry. |
+
+### Suppressed Events
+
+`is_test: true` deliveries are **always suppressed**. Braintrust sends a test delivery on every automation save — these are dropped before any classification.
+
+### Config
+
+```env
+GATEWAY_WATCH__BRAINTRUST__SECRET=your-signing-secret
+```
+
+### Condensed Summary Examples
+
+```
+Braintrust: [my-project] logs alert 'Low Factuality' — 12 rows matched
+Braintrust: [my-project] environment_update in 'production'
+```
+
+---
+
 ## Adding a New Adapter
 
 Each adapter requires changes to 5 files. Work in this order:
