@@ -446,3 +446,57 @@ def test_skip_remaining_prompts_when_first_blank_github(monkeypatch, tmp_path):
     assert "GATEWAY_WATCH__GITHUB__SECRET" not in env
     assert "GATEWAY_WATCH__GITHUB__REPOS" not in env
     assert "GATEWAY_WATCH__LINEAR__SECRET" in env
+
+
+def test_braintrust_section_writes_secret(monkeypatch, tmp_path):
+    """BTST-06: Selecting Braintrust writes GATEWAY_WATCH__BRAINTRUST__SECRET to .env."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",            # 1. ANTHROPIC_API_KEY
+            "/workspace",                # 2. GATEWAY_WORKSPACE_PATH
+            "/workspace/SOUL.md",        # 3. GATEWAY_SOUL_MD_PATH
+            "claude-haiku-4-5-20251001", # 4. GATEWAY_LLM_MODEL
+            # PostHog: skipped
+            "bt-secret-abc123",          # 5. BRAINTRUST_SECRET
+            # Linear: skipped
+            # GitHub: skipped
+        ],
+        checkbox_answer=["Braintrust"],  # Only Braintrust selected
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    from dotenv import dotenv_values
+
+    env = dotenv_values(tmp_path / ".env")
+    assert env.get("GATEWAY_WATCH__BRAINTRUST__SECRET") == "bt-secret-abc123"
+    assert "GATEWAY_WATCH__POSTHOG__SECRET" not in env
+    assert "GATEWAY_WATCH__LINEAR__SECRET" not in env
+
+
+def test_braintrust_not_selected_no_env_var(monkeypatch, tmp_path):
+    """BTST-06: Not selecting Braintrust produces no GATEWAY_WATCH__BRAINTRUST__SECRET."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",
+            "/workspace",
+            "/workspace/SOUL.md",
+            "claude-haiku-4-5-20251001",
+            "my-github-secret",
+            "owner/repo",
+        ],
+        checkbox_answer=["GitHub"],
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    from dotenv import dotenv_values
+
+    env = dotenv_values(tmp_path / ".env")
+    assert "GATEWAY_WATCH__BRAINTRUST__SECRET" not in env
