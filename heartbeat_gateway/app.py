@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from loguru import logger
 
+from heartbeat_gateway.adapters.braintrust import BraintrustAdapter
 from heartbeat_gateway.adapters.github import GitHubAdapter
 from heartbeat_gateway.adapters.linear import LinearAdapter
 from heartbeat_gateway.adapters.posthog import PostHogAdapter
@@ -82,6 +83,7 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
             missing.append("github")
         if not config.watch.posthog.secret:
             missing.append("posthog")
+        # braintrust excluded from require_signatures — verify_signature is permanent passthrough
         if missing:
             raise ValueError(
                 f"GATEWAY_REQUIRE_SIGNATURES=true but no secret configured for: "
@@ -102,6 +104,7 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
     app.state.linear_adapter = LinearAdapter(config)
     app.state.github_adapter = GitHubAdapter(config)
     app.state.posthog_adapter = PostHogAdapter(config)
+    app.state.braintrust_adapter = BraintrustAdapter(config)
 
     @app.post("/webhooks/linear")
     async def linear_webhook(request: Request):
@@ -115,6 +118,10 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
     async def posthog_webhook(request: Request):
         return await _process_webhook(request, "posthog")
 
+    @app.post("/webhooks/braintrust")
+    async def braintrust_webhook(request: Request):
+        return await _process_webhook(request, "braintrust")
+
     # Redirect singular /webhook/{source} → /webhooks/{source} (308 preserves POST method)
     @app.post("/webhook/linear", include_in_schema=False)
     async def redirect_linear():
@@ -127,6 +134,10 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
     @app.post("/webhook/posthog", include_in_schema=False)
     async def redirect_posthog():
         return RedirectResponse(url="/webhooks/posthog", status_code=308)
+
+    @app.post("/webhook/braintrust", include_in_schema=False)
+    async def redirect_braintrust():
+        return RedirectResponse(url="/webhooks/braintrust", status_code=308)
 
     @app.get("/health")
     async def health():
