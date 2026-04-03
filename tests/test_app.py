@@ -9,12 +9,21 @@ from fastapi.testclient import TestClient
 
 from heartbeat_gateway.app import MAX_BODY_BYTES, create_app
 from heartbeat_gateway.config.schema import (
+    BraintrustWatchConfig,
     GatewayConfig,
     GitHubWatchConfig,
     LinearWatchConfig,
     PostHogWatchConfig,
     WatchConfig,
 )
+
+
+def make_gateway_config(tmp_path: Path, braintrust_secret: str = "") -> GatewayConfig:
+    """Factory helper for tests that need a GatewayConfig with optional braintrust_secret."""
+    return GatewayConfig(
+        workspace_path=tmp_path,
+        watch=WatchConfig(braintrust=BraintrustWatchConfig(secret=braintrust_secret)),
+    )
 
 
 def test_secrets_loaded_from_environment_variables(tmp_path: Path, monkeypatch):
@@ -130,3 +139,43 @@ def test_classifier_failure_writes_failed_audit_record(tmp_path):
     records = [_json.loads(line) for line in audit_path.read_text().splitlines() if line.strip()]
     failed = [r for r in records if r.get("status") == "failed"]
     assert len(failed) >= 1, f"Expected failed record, got: {records}"
+
+
+class TestBraintrustWebhookRoute:
+    """BTST-05: /webhooks/braintrust route integration tests."""
+
+    LOGS_PAYLOAD = {
+        "organization": {"id": "org-1", "name": "my-org"},
+        "project": {"id": "proj-1", "name": "test-project"},
+        "automation": {"id": "auto-1", "name": "Test Alert", "event_type": "logs"},
+        "details": {"is_test": True, "message": "test", "count": 0, "related_logs_url": ""},
+    }
+
+    def test_is_test_payload_returns_ignored(self, tmp_path: Path):
+        client = TestClient(create_app(make_gateway_config(tmp_path)))
+        resp = client.post("/webhooks/braintrust", json=self.LOGS_PAYLOAD)
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "ignored"
+
+    def test_invalid_signature_always_passes_no_signing(self, tmp_path: Path):
+        # Braintrust has no webhook signing — verify_signature is permanent passthrough (option-b).
+        # Any request, including one with a bad header, must not return 401.
+        config = make_gateway_config(tmp_path, braintrust_secret="real-secret")
+        client = TestClient(create_app(config))
+        resp = client.post(
+            "/webhooks/braintrust",
+            content=_json.dumps(self.LOGS_PAYLOAD).encode(),
+            headers={"content-type": "application/json", "x-braintrust-signature": "badsig"},
+        )
+        assert resp.status_code != 401
+
+    def test_no_secret_always_passes(self, tmp_path: Path):
+        client = TestClient(create_app(make_gateway_config(tmp_path)))
+        resp = client.post("/webhooks/braintrust", json=self.LOGS_PAYLOAD)
+        assert resp.status_code == 200
+
+    def test_singular_redirect(self, tmp_path: Path):
+        client = TestClient(create_app(make_gateway_config(tmp_path)), follow_redirects=False)
+        resp = client.post("/webhook/braintrust")
+        assert resp.status_code == 308
+        assert resp.headers["location"] == "/webhooks/braintrust"
