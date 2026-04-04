@@ -57,7 +57,11 @@ Plans:
   4. An alert threshold event produces an ACTIONABLE entry with metric name and current/threshold values visible
   5. A request with a wrong or missing `X-Langsmith-Secret` header returns 401 when a token is configured; an unconfigured token allows all requests through (same pattern as other adapters)
   6. `gateway init` prompts for LangSmith token with webhook URL and `X-Langsmith-Secret` header configuration instructions displayed inline
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 05-01-PLAN.md — Test fixtures + stubs, LangSmithAdapter implementation (token auth, multi-shape normalize, clean-run suppression)
+- [ ] 05-02-PLAN.md — Route registration in app.py, NormalizedEvent Literal update, integration tests
+- [ ] 05-03-PLAN.md — gateway init LangSmith section + wizard tests + docs/adapters.md + smoke test
 
 ### Phase 6: Amplitude Adapter
 **Goal**: An Amplitude monitor alert webhook arrives at `/webhooks/amplitude`, is accepted without signature verification (Amplitude sends none), and produces a classified ACTIONABLE entry — while chart annotation events produce DELTA entries and unrecognized events are dropped cleanly.
@@ -79,7 +83,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 3. Schema Foundation + PostHog Wizard | 2/2 | Complete   | 2026-04-02 |
 | 4. Braintrust Adapter | 3/3 | Complete | 2026-04-03 |
-| 5. LangSmith Adapter | 0/? | Not started | - |
+| 5. LangSmith Adapter | 0/3 | Planning complete | - |
 | 6. Amplitude Adapter | 0/? | Not started | - |
 
 ---
