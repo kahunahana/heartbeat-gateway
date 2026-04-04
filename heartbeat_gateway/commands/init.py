@@ -115,19 +115,22 @@ def init() -> None:
 
     # --- Adapter selection ---
     click.echo("")
-    click.echo("  (Use Space to select adapters, Enter to confirm)")
-    selected_adapters = questionary.checkbox(
-        "Which adapters do you want to configure?",
-        choices=[
-            questionary.Choice("PostHog", checked=True),
-            questionary.Choice("Braintrust", checked=True),
-            questionary.Choice("Linear", checked=True),
-            questionary.Choice("GitHub", checked=True),
-        ],
-        instruction="(Space to toggle, Enter to confirm)",
-    ).ask()
-    if selected_adapters is None:
-        raise SystemExit(1)
+    while True:
+        selected_adapters = questionary.checkbox(
+            "Which adapters do you want to configure?",
+            choices=[
+                questionary.Choice("PostHog"),
+                questionary.Choice("Braintrust"),
+                questionary.Choice("Linear"),
+                questionary.Choice("GitHub"),
+            ],
+            instruction="(Space to select, Enter to confirm)",
+        ).ask()
+        if selected_adapters is None:
+            raise SystemExit(1)
+        if selected_adapters:
+            break
+        click.echo("  Please select at least one adapter (use Space to select).")
 
     click.echo(
         "  Don't see your adapter? "

@@ -334,24 +334,52 @@ def test_confirmation_message_single_adapter(monkeypatch, tmp_path):
     assert "We'll walk through it now." in result.output
 
 
-def test_no_confirmation_message_when_no_adapters(monkeypatch, tmp_path):
-    """No confirmation message is shown when zero adapters are selected."""
+def test_empty_selection_reprompts(monkeypatch, tmp_path):
+    """Empty adapter selection shows error and re-prompts; second attempt succeeds."""
     monkeypatch.setattr(_TTY_PATCH, lambda: True)
-    _make_questionary_mocks(
-        monkeypatch,
-        answers=[
+
+    # First checkbox call returns [], second returns ["GitHub"]
+    checkbox_results = iter([[], ["GitHub"]])
+
+    def mock_checkbox(message, choices, **kwargs):
+        return _make_question(next(checkbox_results))
+
+    answer_iter = iter(
+        [
             "sk-ant-testkey",
             "/workspace",
             "/workspace/SOUL.md",
             "claude-haiku-4-5-20251001",
-        ],
-        checkbox_answer=[],
+            "my-github-secret",
+            "owner/repo",
+        ]
     )
+
+    def mock_text(message, default="", validate=None):
+        val = next(answer_iter, default or "")
+        if validate and val:
+            result = validate(val)
+            if result is not True:
+                raise ValueError(f"Validation failed: {result}")
+        return _make_question(val)
+
+    def mock_password(message, validate=None):
+        val = next(answer_iter, "")
+        if validate and val:
+            result = validate(val)
+            if result is not True:
+                raise ValueError(f"Validation failed: {result}")
+        return _make_question(val)
+
+    monkeypatch.setattr(_QUESTIONARY_CHECKBOX, mock_checkbox)
+    monkeypatch.setattr(_QUESTIONARY_TEXT, mock_text)
+    monkeypatch.setattr(_QUESTIONARY_PASSWORD, mock_password)
     monkeypatch.chdir(tmp_path)
     runner = CliRunner()
     result = runner.invoke(cli, ["init"], catch_exceptions=False)
     assert result.exit_code == 0
-    assert "You selected" not in result.output
+    assert "Please select at least one adapter" in result.output
+    assert "You selected 1 adapter: GitHub" in result.output
 
 
 def test_skip_remaining_prompts_when_first_blank_posthog(monkeypatch, tmp_path):
