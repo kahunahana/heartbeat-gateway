@@ -8,7 +8,7 @@
 ## Phases
 
 - [x] **Phase 3: Schema Foundation + PostHog Wizard** - Add three new WatchConfig models and PostHog init wizard section; prerequisite for all adapter phases (completed 2026-04-02)
-- [ ] **Phase 4: Braintrust Adapter** - HMAC-SHA256 verification, is_test suppression, logs + environment_update events
+- [x] **Phase 4: Braintrust Adapter** - HMAC-SHA256 verification, is_test suppression, logs + environment_update events (completed 2026-04-03)
 - [ ] **Phase 5: LangSmith Adapter** - Custom header token auth, run errors + feedback + alert threshold events
 - [ ] **Phase 6: Amplitude Adapter** - Permanent passthrough verify_signature, monitor_alert + chart.annotation events
 
@@ -44,7 +44,7 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md — Pre-build gate (HMAC header confirm), test stubs + fixtures, BraintrustAdapter implementation
 - [x] 04-02-PLAN.md — Route registration in app.py, NormalizedEvent Literal update, integration tests
-- [ ] 04-03-PLAN.md — gateway init Braintrust section + wizard tests + docs/adapters.md
+- [x] 04-03-PLAN.md — gateway init Braintrust section + wizard tests + docs/adapters.md
 
 ### Phase 5: LangSmith Adapter
 **Goal**: A LangSmith webhook arrives at `/webhooks/langsmith`, passes custom-header token validation, and produces classified entries for run errors, negative feedback, and alert threshold crossings — while silently dropping clean run completions.
@@ -78,7 +78,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 3. Schema Foundation + PostHog Wizard | 2/2 | Complete   | 2026-04-02 |
-| 4. Braintrust Adapter | 2/3 | In progress | - |
+| 4. Braintrust Adapter | 3/3 | Complete | 2026-04-03 |
 | 5. LangSmith Adapter | 0/? | Not started | - |
 | 6. Amplitude Adapter | 0/? | Not started | - |
 
@@ -97,7 +97,7 @@ Plans:
 | BTST-03 | Phase 4 | Complete (04-01) |
 | BTST-04 | Phase 4 | Complete (04-01) |
 | BTST-05 | Phase 4 | Complete (04-02) |
-| BTST-06 | Phase 4 | Pending |
+| BTST-06 | Phase 4 | Complete (04-03) |
 | BTST-07 | Phase 4 | Complete (04-01) |
 | LSMT-01 | Phase 5 | Pending |
 | LSMT-02 | Phase 5 | Pending |
