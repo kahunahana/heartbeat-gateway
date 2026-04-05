@@ -121,6 +121,7 @@ def init() -> None:
             choices=[
                 questionary.Choice("PostHog"),
                 questionary.Choice("Braintrust"),
+                questionary.Choice("LangSmith"),
                 questionary.Choice("Linear"),
                 questionary.Choice("GitHub"),
             ],
@@ -184,7 +185,25 @@ def init() -> None:
         if braintrust_secret.strip():
             answers["GATEWAY_WATCH__BRAINTRUST__SECRET"] = braintrust_secret.strip()
 
-    # --- Section 4: Linear adapter ---
+    # --- Section 4: LangSmith adapter ---
+    if "LangSmith" in selected_adapters:
+        click.echo("")
+        click.echo("  LangSmith webhook setup")
+        click.echo("  1. In LangSmith, go to Settings → Webhooks → Add Webhook")
+        click.echo("  2. Set URL: <your-gateway>/webhooks/langsmith")
+        click.echo("  3. Click Headers and add: X-Langsmith-Secret: <your-token>")
+        click.echo("  The token below must match the X-Langsmith-Secret header value.")
+        click.echo("")
+
+        langsmith_token = questionary.password(
+            "LangSmith API token (leave blank to skip):",
+        ).ask()
+        if langsmith_token is None:
+            raise SystemExit(1)
+        if langsmith_token.strip():
+            answers["GATEWAY_WATCH__LANGSMITH__TOKEN"] = langsmith_token.strip()
+
+    # --- Section 5: Linear adapter ---
     if "Linear" in selected_adapters:
         # INIT-02: Print UUID discovery instructions before UUID prompt
         click.echo("")
@@ -210,7 +229,7 @@ def init() -> None:
             if linear_uuid.strip():
                 answers["GATEWAY_WATCH__LINEAR__PROJECT_IDS"] = json.dumps([linear_uuid.strip()])
 
-    # --- Section 5: GitHub adapter ---
+    # --- Section 6: GitHub adapter ---
     if "GitHub" in selected_adapters:
         click.echo("")
 
