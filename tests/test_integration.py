@@ -224,3 +224,209 @@ def test_audit_log_written_for_actionable(client, config):
     assert record["classification"] == "ACTIONABLE"
     assert record["source"] == "linear"
     assert record["rationale"] == rationale
+
+
+# ── 12. Braintrust logs → ACTIONABLE → HEARTBEAT.md ────────────────────────
+# BraintrustAdapter normalizes "logs" events with automation name and count.
+
+
+def test_braintrust_logs_writes_heartbeat(client, config):
+    payload = _load("braintrust_logs.json")
+    msg = "Failing eval scores detected in production pipeline"
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", msg)):
+        resp = client.post("/webhooks/braintrust", json=payload)
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "actionable"}
+    heartbeat = (config.workspace_path / "HEARTBEAT.md").read_text()
+    assert "[BRAINTRUST:LOGS]" in heartbeat
+    assert msg in heartbeat
+
+
+# ── 13. Braintrust environment_update → DELTA → DELTA.md ──────────────────
+
+
+def test_braintrust_env_update_writes_delta(client, config):
+    payload = _load("braintrust_environment_update.json")
+    with patch("litellm.acompletion", _llm_mock("DELTA", "Environment config changed")):
+        resp = client.post("/webhooks/braintrust", json=payload)
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "delta"}
+    assert not (config.workspace_path / "HEARTBEAT.md").exists()
+    delta = (config.workspace_path / "DELTA.md").read_text()
+    assert "BRAINTRUST:ENVIRONMENT_UPDATE" in delta
+
+
+# ── 14. Braintrust is_test → ignored, no LLM call ─────────────────────────
+# Test deliveries are suppressed as the first line of normalize().
+
+
+def test_braintrust_is_test_ignored_no_llm(client, config):
+    payload = _load("braintrust_is_test.json")
+    with patch("litellm.acompletion", AsyncMock(side_effect=AssertionError("LLM must not be called"))):
+        resp = client.post("/webhooks/braintrust", json=payload)
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ignored"
+    assert not (config.workspace_path / "HEARTBEAT.md").exists()
+
+
+# ── 15. Braintrust duplicate logs events → deduped ────────────────────────
+# condense() uses automation name (deterministic), not count or timestamps.
+
+
+def test_braintrust_duplicate_logs_deduped(client, config):
+    payload = _load("braintrust_logs.json")
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", "Eval failure — first")):
+        client.post("/webhooks/braintrust", json=payload)
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", "Eval failure — different rationale")):
+        client.post("/webhooks/braintrust", json=payload)
+    heartbeat = (config.workspace_path / "HEARTBEAT.md").read_text()
+    assert heartbeat.count("[BRAINTRUST:LOGS]") == 1
+
+
+# ── 16. LangSmith run error → ACTIONABLE → HEARTBEAT.md ───────────────────
+# Shape B payload with error field populated.
+
+
+def test_langsmith_run_error_writes_heartbeat(client, config):
+    payload = _load("langsmith_run_error.json")
+    msg = "Agent run failed — investigate error"
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", msg)):
+        resp = client.post(
+            "/webhooks/langsmith",
+            json=payload,
+            headers={"X-Langsmith-Secret": ""},
+        )
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "actionable"}
+    heartbeat = (config.workspace_path / "HEARTBEAT.md").read_text()
+    assert "[LANGSMITH:RUN.ERROR]" in heartbeat
+    assert msg in heartbeat
+
+
+# ── 17. LangSmith clean run → ignored, no LLM call ────────────────────────
+# LSMT-05: clean completions (error=null) are always dropped.
+
+
+def test_langsmith_clean_run_ignored_no_llm(client, config):
+    payload = _load("langsmith_run_clean.json")
+    with patch("litellm.acompletion", AsyncMock(side_effect=AssertionError("LLM must not be called"))):
+        resp = client.post(
+            "/webhooks/langsmith",
+            json=payload,
+            headers={"X-Langsmith-Secret": ""},
+        )
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ignored"
+    assert not (config.workspace_path / "HEARTBEAT.md").exists()
+
+
+# ── 18. LangSmith feedback → ACTIONABLE → HEARTBEAT.md ────────────────────
+# Shape A payload with negative feedback score.
+
+
+def test_langsmith_feedback_writes_heartbeat(client, config):
+    payload = _load("langsmith_feedback.json")
+    msg = "Negative user feedback on agent output"
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", msg)):
+        resp = client.post(
+            "/webhooks/langsmith",
+            json=payload,
+            headers={"X-Langsmith-Secret": ""},
+        )
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "actionable"}
+    heartbeat = (config.workspace_path / "HEARTBEAT.md").read_text()
+    assert "[LANGSMITH:FEEDBACK]" in heartbeat
+    assert msg in heartbeat
+
+
+# ── 19. LangSmith alert → ACTIONABLE → HEARTBEAT.md ───────────────────────
+# Alert threshold crossing event.
+
+
+def test_langsmith_alert_writes_heartbeat(client, config):
+    payload = _load("langsmith_alert.json")
+    msg = "Alert threshold exceeded for latency metric"
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", msg)):
+        resp = client.post(
+            "/webhooks/langsmith",
+            json=payload,
+            headers={"X-Langsmith-Secret": ""},
+        )
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "actionable"}
+    heartbeat = (config.workspace_path / "HEARTBEAT.md").read_text()
+    assert "[LANGSMITH:ALERT.THRESHOLD]" in heartbeat
+    assert msg in heartbeat
+
+
+# ── 20. LangSmith auth rejection → 401 ────────────────────────────────────
+# When a token is configured, mismatched X-Langsmith-Secret returns 401.
+
+
+def test_langsmith_bad_token_returns_401(client, config):
+    config.watch.langsmith.token = "correct-token"
+    payload = _load("langsmith_run_error.json")
+    with patch("litellm.acompletion", AsyncMock(side_effect=AssertionError("LLM must not be called"))):
+        resp = client.post(
+            "/webhooks/langsmith",
+            json=payload,
+            headers={"X-Langsmith-Secret": "wrong-token"},
+        )
+    assert resp.status_code == 401
+
+
+# ── 21. Amplitude monitor_alert → ACTIONABLE → HEARTBEAT.md ───────────────
+# Amplitude payloads have no signature — verify_signature always passes.
+
+
+def test_amplitude_monitor_alert_writes_heartbeat(client, config):
+    payload = _load("amplitude_monitor_alert.json")
+    msg = "Error rate spike detected — requires attention"
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", msg)):
+        resp = client.post("/webhooks/amplitude", json=payload)
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "actionable"}
+    heartbeat = (config.workspace_path / "HEARTBEAT.md").read_text()
+    assert "[AMPLITUDE:MONITOR_ALERT]" in heartbeat
+    assert msg in heartbeat
+
+
+# ── 22. Amplitude chart.annotation → DELTA → DELTA.md ─────────────────────
+
+
+def test_amplitude_annotation_writes_delta(client, config):
+    payload = _load("amplitude_annotation.json")
+    with patch("litellm.acompletion", _llm_mock("DELTA", "Chart annotation added")):
+        resp = client.post("/webhooks/amplitude", json=payload)
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "delta"}
+    assert not (config.workspace_path / "HEARTBEAT.md").exists()
+    delta = (config.workspace_path / "DELTA.md").read_text()
+    assert "AMPLITUDE:CHART.ANNOTATION" in delta
+
+
+# ── 23. Amplitude unknown event → ignored, no LLM call ────────────────────
+
+
+def test_amplitude_unknown_ignored_no_llm(client, config):
+    payload = {"event_type": "unknown_amplitude_event", "data": {}}
+    with patch("litellm.acompletion", AsyncMock(side_effect=AssertionError("LLM must not be called"))):
+        resp = client.post("/webhooks/amplitude", json=payload)
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ignored"
+    assert not (config.workspace_path / "HEARTBEAT.md").exists()
+
+
+# ── 24. Amplitude duplicate monitor_alert → deduped ───────────────────────
+# condense() uses charts[0]["header"] (deterministic), not what_happened (timestamp).
+
+
+def test_amplitude_duplicate_monitor_alert_deduped(client, config):
+    payload = _load("amplitude_monitor_alert.json")
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", "Alert — first rationale")):
+        client.post("/webhooks/amplitude", json=payload)
+    with patch("litellm.acompletion", _llm_mock("ACTIONABLE", "Alert — different rationale")):
+        client.post("/webhooks/amplitude", json=payload)
+    heartbeat = (config.workspace_path / "HEARTBEAT.md").read_text()
+    assert heartbeat.count("[AMPLITUDE:MONITOR_ALERT]") == 1
