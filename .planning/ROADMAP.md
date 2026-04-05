@@ -73,7 +73,11 @@ Plans:
   3. `verify_signature` always returns True regardless of config — no Amplitude event ever returns 401 due to signature failure
   4. Two redeliveries of the same monitor alert produce exactly one HEARTBEAT.md entry — `condense()` output is deterministic (no timestamps or run IDs)
   5. `gateway init` prompts for Amplitude secret with an explicit inline warning that Amplitude does not sign webhooks and the field is for future compatibility only
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 06-01-PLAN.md — AmplitudeAdapter implementation + unit tests + fixtures + NormalizedEvent Literal update
+- [ ] 06-02-PLAN.md — Route wiring in app.py + doctor WARN check + integration tests
+- [ ] 06-03-PLAN.md — gateway init Amplitude section + docs/adapters.md + smoke test
 
 ---
 
@@ -84,7 +88,7 @@ Plans:
 | 3. Schema Foundation + PostHog Wizard | 2/2 | Complete   | 2026-04-02 |
 | 4. Braintrust Adapter | 3/3 | Complete | 2026-04-03 |
 | 5. LangSmith Adapter | 3/3 | Complete   | 2026-04-05 |
-| 6. Amplitude Adapter | 0/? | Not started | - |
+| 6. Amplitude Adapter | 0/3 | Not started | - |
 
 ---
 
@@ -119,31 +123,31 @@ Plans:
 | AMP-06 | Phase 6 | Pending |
 | AMP-07 | Phase 6 | Pending |
 
-**v0.4.0 Coverage: 26/26 requirements mapped** (FOUND-01–04 counted as 4; AMP-01–07 as 7; BTST-01–07 as 7; LSMT-01–08 as 8)
+**v0.4.0 Coverage: 26/26 requirements mapped** (FOUND-01-04 counted as 4; AMP-01-07 as 7; BTST-01-07 as 7; LSMT-01-08 as 8)
 
 ---
 
 ## Key Constraints (from research)
 
 **Phase 3 (Schema):**
-- All `*WatchConfig` classes must inherit `BaseModel`, not `BaseSettings` — BaseSettings causes silent secret bypass (v0.2.0 regression)
+- All `*WatchConfig` classes must inherit `BaseModel`, not `BaseSettings` -- BaseSettings causes silent secret bypass (v0.2.0 regression)
 - Add regression test per adapter: set env var via monkeypatch, instantiate GatewayConfig(), assert secret loaded correctly
 
 **Phase 4 (Braintrust):**
-- HMAC header name must be confirmed from `braintrust.dev/docs/guides/automations` before writing `verify_signature` — do not guess; a wrong header silently accepts all requests without verification
+- HMAC header name must be confirmed from `braintrust.dev/docs/guides/automations` before writing `verify_signature` -- do not guess; a wrong header silently accepts all requests without verification
 - `is_test` check is the **first** line of `normalize()`, before any other logic
 - `condense()` must use `automation["name"]`, not `details["count"]` or `details["time_start"]` (dedup constraint)
 
 **Phase 5 (LangSmith):**
-- Token validated via `X-Langsmith-Secret` custom header — not HMAC, not query param
-- `run.completed` with no errors → always return `None` (high-volume noise suppression, LSMT-05)
-- Payload structure: run object nested under `kwargs` key — `payload.get("kwargs", {}).get("run_type", "")` not `payload.get("run_type", "")`
+- Token validated via `X-Langsmith-Secret` custom header -- not HMAC, not query param
+- `run.completed` with no errors -> always return `None` (high-volume noise suppression, LSMT-05)
+- Payload structure: run object nested under `kwargs` key -- `payload.get("kwargs", {}).get("run_type", "")` not `payload.get("run_type", "")`
 - `condense()` must use `kwargs["name"]` + `kwargs["session_name"]`, not `webhook_sent_at`
 - Verify fleet and alert webhook payload shapes against `docs.langchain.com/langsmith/alerts-webhook` before writing fixtures
 
 **Phase 6 (Amplitude):**
-- `verify_signature` is a **permanent passthrough** — always returns True; docstring must state this explicitly and advise IP allowlisting
-- Amplitude config `secret` field exists for symmetry only — setting it has no security effect
+- `verify_signature` is a **permanent passthrough** -- always returns True; docstring must state this explicitly and advise IP allowlisting
+- Amplitude config `secret` field exists for symmetry only -- setting it has no security effect
 - Monitor payload wraps alerts in `charts` array: access `payload.get("charts", [])`, handle empty array
 - `condense()` must use `charts[0]["header"]`, not `what_happened` (embeds a timestamp)
 - Amplitude must be excluded from `require_signatures` enforcement; add `gateway doctor` warning when `GATEWAY_REQUIRE_SIGNATURES=true` and Amplitude secret is configured
@@ -154,13 +158,13 @@ Plans:
 
 ### Phase 1: CLI Foundation + gateway doctor (COMPLETE)
 **Goal:** Wire the Click CLI group and deliver a fully functional `gateway doctor` command that validates all known silent failure modes.
-**Requirements:** CLI-01, CLI-02, CLI-03, DOC-01–DOC-12
-**Status:** Complete — 2/2 plans executed
+**Requirements:** CLI-01, CLI-02, CLI-03, DOC-01-DOC-12
+**Status:** Complete -- 2/2 plans executed
 
 ### Phase 2: gateway init (COMPLETE)
 **Goal:** Deliver a fully functional `gateway init` wizard that guides users through `.env` configuration with TTY detection, inline UUID validation, merge-by-default handling, and atomic write.
-**Requirements:** INIT-01–INIT-09
-**Status:** Complete — 2/2 plans executed
+**Requirements:** INIT-01-INIT-09
+**Status:** Complete -- 2/2 plans executed
 
 ---
 
