@@ -122,6 +122,7 @@ def init() -> None:
                 questionary.Choice("PostHog"),
                 questionary.Choice("Braintrust"),
                 questionary.Choice("LangSmith"),
+                questionary.Choice("Amplitude"),
                 questionary.Choice("Linear"),
                 questionary.Choice("GitHub"),
             ],
@@ -202,6 +203,24 @@ def init() -> None:
             raise SystemExit(1)
         if langsmith_token.strip():
             answers["GATEWAY_WATCH__LANGSMITH__TOKEN"] = langsmith_token.strip()
+
+    # --- Section 4b: Amplitude adapter ---
+    if "Amplitude" in selected_adapters:
+        click.echo("")
+        click.echo("  Amplitude webhook setup")
+        click.echo("  Note: Amplitude does not sign webhook deliveries.")
+        click.echo("  The secret below is stored for future compatibility only — it is NOT verified.")
+        click.echo("  Secure this endpoint with IP allowlisting instead.")
+        click.echo("  Amplitude monitor alerts -> /webhooks/amplitude")
+        click.echo("")
+
+        amplitude_secret = questionary.password(
+            "Amplitude webhook secret (leave blank to skip):",
+        ).ask()
+        if amplitude_secret is None:
+            raise SystemExit(1)
+        if amplitude_secret.strip():
+            answers["GATEWAY_WATCH__AMPLITUDE__SECRET"] = amplitude_secret.strip()
 
     # --- Section 5: Linear adapter ---
     if "Linear" in selected_adapters:

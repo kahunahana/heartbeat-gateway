@@ -79,8 +79,11 @@ def _make_questionary_mocks(monkeypatch, answers: list, checkbox_answer: list | 
 #   2. GATEWAY_WORKSPACE_PATH      (text)
 #   3. GATEWAY_SOUL_MD_PATH        (text)
 #   4. GATEWAY_LLM_MODEL           (text)
-#   5. POSTHOG_PROJECT_ID          (text)   <- new
-#   6. POSTHOG_SECRET              (password) <- new
+#   5. POSTHOG_PROJECT_ID          (text)
+#   6. POSTHOG_SECRET              (password)
+#   -- Braintrust: BRAINTRUST_SECRET (password) — only when selected
+#   -- LangSmith: LANGSMITH_TOKEN (password) — only when selected
+#   -- Amplitude: AMPLITUDE_SECRET (password) — only when selected
 #   7. LINEAR_SECRET               (password)
 #   8. LINEAR_PROJECT_IDS          (text, UUID validate)
 #   9. GITHUB_SECRET               (password)
@@ -584,3 +587,82 @@ def test_langsmith_not_selected_no_env_var(monkeypatch, tmp_path):
 
     env = dotenv_values(tmp_path / ".env")
     assert "GATEWAY_WATCH__LANGSMITH__TOKEN" not in env
+
+
+def test_amplitude_section_writes_secret(monkeypatch, tmp_path):
+    """AMPL-07: Selecting Amplitude writes GATEWAY_WATCH__AMPLITUDE__SECRET to .env."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",  # 1. ANTHROPIC_API_KEY
+            "/workspace",  # 2. GATEWAY_WORKSPACE_PATH
+            "/workspace/SOUL.md",  # 3. GATEWAY_SOUL_MD_PATH
+            "claude-haiku-4-5-20251001",  # 4. GATEWAY_LLM_MODEL
+            # PostHog: skipped
+            # Braintrust: skipped
+            # LangSmith: skipped
+            "amp-test-secret",  # 5. AMPLITUDE_SECRET
+            # Linear: skipped
+            # GitHub: skipped
+        ],
+        checkbox_answer=["Amplitude"],  # Only Amplitude selected
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    from dotenv import dotenv_values
+
+    env = dotenv_values(tmp_path / ".env")
+    assert env.get("GATEWAY_WATCH__AMPLITUDE__SECRET") == "amp-test-secret"
+    assert "GATEWAY_WATCH__POSTHOG__SECRET" not in env
+    assert "GATEWAY_WATCH__BRAINTRUST__SECRET" not in env
+    assert "GATEWAY_WATCH__LANGSMITH__TOKEN" not in env
+    assert "GATEWAY_WATCH__LINEAR__SECRET" not in env
+
+
+def test_amplitude_no_signing_warning_displayed(monkeypatch, tmp_path):
+    """AMPL-07: Selecting Amplitude shows no-signing warning before secret prompt."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",
+            "/workspace",
+            "/workspace/SOUL.md",
+            "claude-haiku-4-5-20251001",
+            "amp-test-secret",
+        ],
+        checkbox_answer=["Amplitude"],
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    assert "does not sign" in result.output or "NOT verified" in result.output
+
+
+def test_amplitude_not_selected_no_env_var(monkeypatch, tmp_path):
+    """AMPL-07: Not selecting Amplitude produces no GATEWAY_WATCH__AMPLITUDE__SECRET."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",
+            "/workspace",
+            "/workspace/SOUL.md",
+            "claude-haiku-4-5-20251001",
+            "my-github-secret",
+            "owner/repo",
+        ],
+        checkbox_answer=["GitHub"],
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    from dotenv import dotenv_values
+
+    env = dotenv_values(tmp_path / ".env")
+    assert "GATEWAY_WATCH__AMPLITUDE__SECRET" not in env
