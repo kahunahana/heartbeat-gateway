@@ -1,0 +1,10 @@
+{
+  "project_name": "production-evals",
+  "alert_rule_id": "a3b2c1d0-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+  "alert_rule_name": "High Error Rate",
+  "alert_rule_type": "threshold",
+  "alert_rule_attribute": "error_count",
+  "triggered_metric_value": 15,
+  "triggered_threshold": 10,
+  "timestamp": "2024-08-30T23:07:40.150000+00:00"
+}
