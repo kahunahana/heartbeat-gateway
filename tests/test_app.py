@@ -19,9 +19,7 @@ from heartbeat_gateway.config.schema import (
 )
 
 
-def make_gateway_config(
-    tmp_path: Path, braintrust_secret: str = "", langsmith_token: str = ""
-) -> GatewayConfig:
+def make_gateway_config(tmp_path: Path, braintrust_secret: str = "", langsmith_token: str = "") -> GatewayConfig:
     """Factory helper for tests that need a GatewayConfig with optional adapter credentials."""
     return GatewayConfig(
         workspace_path=tmp_path,
@@ -230,9 +228,7 @@ class TestLangSmithWebhookRoute:
         assert resp.status_code == 200
 
     def test_singular_redirect(self, tmp_path: Path):
-        client = TestClient(
-            create_app(make_gateway_config(tmp_path)), follow_redirects=False
-        )
+        client = TestClient(create_app(make_gateway_config(tmp_path)), follow_redirects=False)
         resp = client.post("/webhook/langsmith")
         assert resp.status_code == 308
         assert resp.headers["location"] == "/webhooks/langsmith"
