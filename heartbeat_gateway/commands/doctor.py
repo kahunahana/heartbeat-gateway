@@ -240,6 +240,21 @@ class DoctorRunner:
                     message="GATEWAY_WATCH__GITHUB__SECRET is set",
                 )
             )
+        if config.require_signatures and config.watch.amplitude.secret:
+            results.append(
+                CheckResult(
+                    name="Amplitude signature (no-op)",
+                    status=CheckStatus.WARN,
+                    message=(
+                        "GATEWAY_REQUIRE_SIGNATURES=true and GATEWAY_WATCH__AMPLITUDE__SECRET is set, "
+                        "but Amplitude does not sign webhook deliveries — the secret has no security effect"
+                    ),
+                    fix_hint=(
+                        "Restrict /webhooks/amplitude to Amplitude IP ranges via firewall rules instead. "
+                        "See docs/adapters.md#amplitude for details."
+                    ),
+                )
+            )
         return results
 
     def _check_body_size_limit(self) -> CheckResult:

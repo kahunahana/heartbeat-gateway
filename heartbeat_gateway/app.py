@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from loguru import logger
 
+from heartbeat_gateway.adapters.amplitude import AmplitudeAdapter
 from heartbeat_gateway.adapters.braintrust import BraintrustAdapter
 from heartbeat_gateway.adapters.github import GitHubAdapter
 from heartbeat_gateway.adapters.langsmith import LangSmithAdapter
@@ -84,6 +85,7 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
             missing.append("github")
         if not config.watch.posthog.secret:
             missing.append("posthog")
+        # amplitude excluded from require_signatures — verify_signature is permanent passthrough (no signing)
         # braintrust excluded from require_signatures — verify_signature is permanent passthrough
         # langsmith excluded from require_signatures — verify_signature uses token header, not HMAC
         if missing:
@@ -106,6 +108,7 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
     app.state.linear_adapter = LinearAdapter(config)
     app.state.github_adapter = GitHubAdapter(config)
     app.state.posthog_adapter = PostHogAdapter(config)
+    app.state.amplitude_adapter = AmplitudeAdapter(config)
     app.state.braintrust_adapter = BraintrustAdapter(config)
     app.state.langsmith_adapter = LangSmithAdapter(config)
 
@@ -129,6 +132,10 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
     async def langsmith_webhook(request: Request):
         return await _process_webhook(request, "langsmith")
 
+    @app.post("/webhooks/amplitude")
+    async def amplitude_webhook(request: Request):
+        return await _process_webhook(request, "amplitude")
+
     # Redirect singular /webhook/{source} → /webhooks/{source} (308 preserves POST method)
     @app.post("/webhook/linear", include_in_schema=False)
     async def redirect_linear():
@@ -149,6 +156,10 @@ def create_app(config: GatewayConfig | None = None) -> FastAPI:
     @app.post("/webhook/langsmith", include_in_schema=False)
     async def redirect_langsmith():
         return RedirectResponse(url="/webhooks/langsmith", status_code=308)
+
+    @app.post("/webhook/amplitude", include_in_schema=False)
+    async def redirect_amplitude():
+        return RedirectResponse(url="/webhooks/amplitude", status_code=308)
 
     @app.get("/health")
     async def health():
