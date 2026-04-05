@@ -53,7 +53,7 @@ completed: 2026-04-04
 - **Duration:** ~15 min
 - **Started:** 2026-04-04T00:20:00Z
 - **Completed:** 2026-04-04T00:35:00Z
-- **Tasks:** 2 of 3 complete (Task 3 is human-verify checkpoint)
+- **Tasks:** 3 of 3 complete
 - **Files modified:** 3
 
 ## Accomplishments
@@ -69,7 +69,7 @@ completed: 2026-04-04
 
 1. **Task 1: Add Amplitude section to gateway init wizard and update tests** - `3007e40` (feat)
 2. **Task 2: Update docs/adapters.md with Amplitude section** - `f381662` (docs)
-3. **Task 3: Smoke test** - awaiting human verification (checkpoint)
+3. **Task 3: Smoke test** - human-approved (checkpoint passed 2026-04-04)
 
 ## Files Created/Modified
 
@@ -95,11 +95,19 @@ None.
 
 None - no external service configuration required for this plan.
 
-## Next Phase Readiness
+## Smoke Test Results
 
-- Task 3 (smoke test) requires human verification: run `uv run heartbeat-gateway init`, select Amplitude, verify no-signing warning and .env output
-- After smoke test approval: v0.4.0 Amplitude adapter is fully complete (plans 01-03 done)
-- Full test suite green (223 passed, 1 xfailed) and ruff clean
+Human-approved 2026-04-04. User ran `uv run heartbeat-gateway init`, selected Amplitude only:
+- Wizard displayed "Amplitude webhook setup"
+- No-signing warning showed: "Note: Amplitude does not sign webhook deliveries."
+- Additional context: "The secret below is stored for future compatibility only — it is NOT verified."
+- "Secure this endpoint with IP allowlisting instead." displayed correctly
+- Secret prompt with "leave blank to skip" option functioned correctly
+- Wizard completed successfully; doctor showed 8 passed, 2 warned (Linear/GitHub secrets not set — expected)
+
+## v0.4.0 Complete
+
+v0.4.0 Amplitude adapter fully complete — all three plans done. Full test suite green (223 passed, 1 xfailed) and ruff clean.
 
 ---
 *Phase: 06-amplitude-adapter*

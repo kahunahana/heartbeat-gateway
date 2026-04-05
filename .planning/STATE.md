@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-03-PLAN.md tasks 1-2 (Tasks 1-2 auto; Task 3 smoke test checkpoint pending human verify)
-last_updated: "2026-04-05T11:03:45.686Z"
+stopped_at: Completed 06-03-PLAN.md — Phase 6 and v0.4.0 fully complete
+last_updated: "2026-04-04T00:00:00Z"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -18,23 +18,23 @@ progress:
 
 **What:** heartbeat-gateway v0.4.0 — Amplitude, Braintrust, and LangSmith webhook adapters + PostHog init wizard section
 **Core Value:** Operators running AI agent stacks can classify signals from LLM eval, observability, and analytics platforms alongside Linear and GitHub — within the existing five-stage pipeline, zero structural changes.
-**Current Focus:** Phase 6 in progress — 06-01 and 06-02 complete; 06-03 tasks 1-2 done, smoke test checkpoint awaiting human verify
+**Current Focus:** v0.4.0 complete — all 6 phases done, all 15 plans executed; Amplitude adapter smoke test human-approved
 
 ## Current Position
 
 - **Milestone:** v0.4.0 — Adapter Expansion
 - **Phase:** Phase 6 — Amplitude Adapter (in progress)
-- **Plan:** 06-03 tasks 1-2 complete (init wizard, docs; 223 tests total); Task 3 smoke test awaiting human verify
-- **Status:** In progress — checkpoint
+- **Plan:** 06-03 complete (all tasks done; smoke test human-approved 2026-04-04)
+- **Status:** Complete — v0.4.0 milestone achieved
 
 ## Progress
 
 ```
-[█████████░] 93% — Phase 6 in progress (14/15 plans done)
+[██████████] 100% — v0.4.0 complete (15/15 plans done)
 Phase 3: Schema Foundation + PostHog Wizard  ✓ Complete (Plans 01-02 done)
 Phase 4: Braintrust Adapter                  ✓ Complete (Plans 01-03 done, 2026-04-03)
 Phase 5: LangSmith Adapter                   ✓ Complete (Plans 01-03 done, smoke test approved 2026-04-05)
-Phase 6: Amplitude Adapter                   ░ In progress (Plans 01-02 done, 03 pending)
+Phase 6: Amplitude Adapter                   ✓ Complete (Plans 01-03 done, smoke test approved 2026-04-04)
 ```
 
 ## Recent Decisions
@@ -73,9 +73,9 @@ Phase 6: Amplitude Adapter                   ░ In progress (Plans 01-02 done, 
 
 ## Pending Todos
 
-- Human verify smoke test for 06-03 (Task 3 checkpoint)
+- None — v0.4.0 milestone fully complete
 
 ## Session Continuity
 
-Last session: 2026-04-05T11:03:45.683Z
-Stopped at: Completed 06-03-PLAN.md tasks 1-2 (Tasks 1-2 auto; Task 3 smoke test checkpoint pending human verify)
+Last session: 2026-04-04T00:00:00Z
+Stopped at: Completed 06-03-PLAN.md — v0.4.0 milestone fully achieved (all 15 plans done, smoke test approved)

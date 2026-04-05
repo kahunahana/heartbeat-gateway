@@ -75,9 +75,9 @@ Plans:
   5. `gateway init` prompts for Amplitude secret with an explicit inline warning that Amplitude does not sign webhooks and the field is for future compatibility only
 **Plans**: 3 plans
 Plans:
-- [ ] 06-01-PLAN.md — AmplitudeAdapter implementation + unit tests + fixtures + NormalizedEvent Literal update
-- [ ] 06-02-PLAN.md — Route wiring in app.py + doctor WARN check + integration tests
-- [ ] 06-03-PLAN.md — gateway init Amplitude section + docs/adapters.md + smoke test
+- [x] 06-01-PLAN.md — AmplitudeAdapter implementation + unit tests + fixtures + NormalizedEvent Literal update
+- [x] 06-02-PLAN.md — Route wiring in app.py + doctor WARN check + integration tests
+- [x] 06-03-PLAN.md — gateway init Amplitude section + docs/adapters.md + smoke test
 
 ---
 
@@ -115,13 +115,13 @@ Plans:
 | LSMT-06 | Phase 5 | Complete (05-02) |
 | LSMT-07 | Phase 5 | Complete (05-03) |
 | LSMT-08 | Phase 5 | Complete (05-01) |
-| AMP-01 | Phase 6 | Pending |
-| AMP-02 | Phase 6 | Pending |
-| AMP-03 | Phase 6 | Pending |
-| AMP-04 | Phase 6 | Pending |
-| AMP-05 | Phase 6 | Pending |
-| AMP-06 | Phase 6 | Pending |
-| AMP-07 | Phase 6 | Pending |
+| AMP-01 | Phase 6 | Complete (06-01) |
+| AMP-02 | Phase 6 | Complete (06-01) |
+| AMP-03 | Phase 6 | Complete (06-01) |
+| AMP-04 | Phase 6 | Complete (06-01) |
+| AMP-05 | Phase 6 | Complete (06-03) |
+| AMP-06 | Phase 6 | Complete (06-03) |
+| AMP-07 | Phase 6 | Complete (06-02) |
 
 **v0.4.0 Coverage: 26/26 requirements mapped** (FOUND-01-04 counted as 4; AMP-01-07 as 7; BTST-01-07 as 7; LSMT-01-08 as 8)
 
