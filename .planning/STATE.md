@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: milestone
 status: planning
-stopped_at: Completed 05-03-PLAN.md — all 3 tasks complete including smoke test approved; Phase 5 fully complete
-last_updated: "2026-04-05T09:12:53.533Z"
+stopped_at: Completed 06-01-PLAN.md — AmplitudeAdapter implemented with 9 tests passing; NormalizedEvent Literal updated; ruff clean
+last_updated: "2026-04-05T10:46:03Z"
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 15
+  completed_plans: 13
 ---
 
 # STATE.md — heartbeat-gateway
@@ -18,27 +18,31 @@ progress:
 
 **What:** heartbeat-gateway v0.4.0 — Amplitude, Braintrust, and LangSmith webhook adapters + PostHog init wizard section
 **Core Value:** Operators running AI agent stacks can classify signals from LLM eval, observability, and analytics platforms alongside Linear and GitHub — within the existing five-stage pipeline, zero structural changes.
-**Current Focus:** Phase 5 fully complete — 05-01 adapter, 05-02 route wiring, 05-03 wizard all tasks done including smoke test approved; Phase 6 (Amplitude) ready to begin
+**Current Focus:** Phase 6 in progress — 06-01 (AmplitudeAdapter + tests) complete; route wiring (06-02) and wizard (06-03) pending
 
 ## Current Position
 
 - **Milestone:** v0.4.0 — Adapter Expansion
-- **Phase:** Phase 5 — LangSmith Adapter (complete, smoke test approved 2026-04-05)
-- **Plan:** 05-01, 05-02, 05-03 all tasks complete including Task 3 smoke test
-- **Status:** Ready to plan
+- **Phase:** Phase 6 — Amplitude Adapter (in progress)
+- **Plan:** 06-01 complete (AmplitudeAdapter implemented, 9 tests passing)
+- **Status:** In progress
 
 ## Progress
 
 ```
-[██████████] 100% — Phase 5 complete pending smoke test (12/12 plans done)
+[█████████░] 87% — Phase 6 in progress (13/15 plans done)
 Phase 3: Schema Foundation + PostHog Wizard  ✓ Complete (Plans 01-02 done)
 Phase 4: Braintrust Adapter                  ✓ Complete (Plans 01-03 done, 2026-04-03)
-Phase 5: LangSmith Adapter                   ✓ Tasks complete (Plans 01-03 done, smoke test pending)
-Phase 6: Amplitude Adapter                   ░ Not started
+Phase 5: LangSmith Adapter                   ✓ Complete (Plans 01-03 done, smoke test approved 2026-04-05)
+Phase 6: Amplitude Adapter                   ░ In progress (Plan 01 done, 02-03 pending)
 ```
 
 ## Recent Decisions
 
+- Amplitude verify_signature is permanent passthrough — Amplitude confirmed no webhook signing; docstring advises IP allowlisting (06-01)
+- condense() uses charts[0].header not what_happened — what_happened embeds timestamp, breaking dedup determinism across redeliveries (06-01)
+- Empty charts guard (if not charts: return None) prevents IndexError on monitor_alert with empty array (06-01)
+- NormalizedEvent.source Literal updated in same task as adapter — no type: ignore comments needed (06-01)
 - LangSmith init wizard token prompt uses questionary.password and env var GATEWAY_WATCH__LANGSMITH__TOKEN (05-03)
 - LangSmith placed between Braintrust and Linear in checkbox — consistent with adapter build order (05-03)
 - Inline wizard instructions explicitly state X-Langsmith-Secret header requirement (05-03)
@@ -65,9 +69,9 @@ Phase 6: Amplitude Adapter                   ░ Not started
 
 ## Pending Todos
 
-- Plan and execute Phase 6 (Amplitude Adapter)
+- Execute Phase 6 Plans 02 and 03 (route wiring + init wizard for Amplitude)
 
 ## Session Continuity
 
-Last session: 2026-04-05T00:00:00.000Z
-Stopped at: Completed 05-03-PLAN.md — all 3 tasks complete including smoke test approved; Phase 5 fully complete
+Last session: 2026-04-05T10:46:03Z
+Stopped at: Completed 06-01-PLAN.md — AmplitudeAdapter implemented with 9 tests passing; NormalizedEvent Literal updated; ruff clean

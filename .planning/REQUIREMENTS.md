@@ -31,13 +31,13 @@
 
 ### Amplitude Adapter (AMP)
 
-- [ ] **AMP-01**: `AmplitudeAdapter.verify_signature()` always returns `True`; docstring explicitly documents the no-signing limitation and advises IP allowlisting as mitigation
-- [ ] **AMP-02**: Normalizes `monitor_alert` events — metric name, current value, threshold value → ACTIONABLE candidate
-- [ ] **AMP-03**: Normalizes `chart.annotation` events — annotation text, chart name → DELTA candidate
-- [ ] **AMP-04**: Returns `None` for unrecognized event types
+- [x] **AMP-01**: `AmplitudeAdapter.verify_signature()` always returns `True`; docstring explicitly documents the no-signing limitation and advises IP allowlisting as mitigation
+- [x] **AMP-02**: Normalizes `monitor_alert` events — metric name, current value, threshold value → ACTIONABLE candidate
+- [x] **AMP-03**: Normalizes `chart.annotation` events — annotation text, chart name → DELTA candidate
+- [x] **AMP-04**: Returns `None` for unrecognized event types
 - [ ] **AMP-05**: `/webhooks/amplitude` route wired in `app.py`; `AmplitudeAdapter` registered in app state; pre-filter integration
 - [ ] **AMP-06**: `gateway init` includes Amplitude section — secret prompt with no-signing warning displayed inline
-- [ ] **AMP-07**: Unit tests (verify passthrough, normalize monitor_alert, normalize annotation, normalize unknown→None) + fixture JSON in `tests/fixtures/` + `docs/adapters.md` updated
+- [x] **AMP-07**: Unit tests (verify passthrough, normalize monitor_alert, normalize annotation, normalize unknown→None) + fixture JSON in `tests/fixtures/` + `docs/adapters.md` updated
 
 ### Braintrust Adapter (BTST)
 
@@ -110,13 +110,13 @@
 | LSMT-06 | Phase 5 | Complete |
 | LSMT-07 | Phase 5 | Complete |
 | LSMT-08 | Phase 5 | Complete |
-| AMP-01 | Phase 6 | Pending |
-| AMP-02 | Phase 6 | Pending |
-| AMP-03 | Phase 6 | Pending |
-| AMP-04 | Phase 6 | Pending |
+| AMP-01 | Phase 6 | Complete |
+| AMP-02 | Phase 6 | Complete |
+| AMP-03 | Phase 6 | Complete |
+| AMP-04 | Phase 6 | Complete |
 | AMP-05 | Phase 6 | Pending |
 | AMP-06 | Phase 6 | Pending |
-| AMP-07 | Phase 6 | Pending |
+| AMP-07 | Phase 6 | Complete |
 
 **v0.4.0 Coverage: 26/26 requirements mapped** ✓
 
