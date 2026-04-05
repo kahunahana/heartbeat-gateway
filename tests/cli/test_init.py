@@ -528,3 +528,57 @@ def test_braintrust_not_selected_no_env_var(monkeypatch, tmp_path):
 
     env = dotenv_values(tmp_path / ".env")
     assert "GATEWAY_WATCH__BRAINTRUST__SECRET" not in env
+
+
+def test_langsmith_section_writes_token(monkeypatch, tmp_path):
+    """LSMT-07: Selecting LangSmith writes GATEWAY_WATCH__LANGSMITH__TOKEN to .env."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",           # 1. ANTHROPIC_API_KEY
+            "/workspace",               # 2. GATEWAY_WORKSPACE_PATH
+            "/workspace/SOUL.md",       # 3. GATEWAY_SOUL_MD_PATH
+            "claude-haiku-4-5-20251001",# 4. GATEWAY_LLM_MODEL
+            # PostHog: skipped
+            # Braintrust: skipped
+            "ls-token-abc123",          # 5. LANGSMITH_TOKEN
+            # Linear: skipped
+            # GitHub: skipped
+        ],
+        checkbox_answer=["LangSmith"],  # Only LangSmith selected
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    from dotenv import dotenv_values
+    env = dotenv_values(tmp_path / ".env")
+    assert env.get("GATEWAY_WATCH__LANGSMITH__TOKEN") == "ls-token-abc123"
+    assert "GATEWAY_WATCH__POSTHOG__SECRET" not in env
+    assert "GATEWAY_WATCH__BRAINTRUST__SECRET" not in env
+    assert "GATEWAY_WATCH__LINEAR__SECRET" not in env
+
+
+def test_langsmith_not_selected_no_env_var(monkeypatch, tmp_path):
+    """LSMT-07: Not selecting LangSmith produces no GATEWAY_WATCH__LANGSMITH__TOKEN."""
+    monkeypatch.setattr(_TTY_PATCH, lambda: True)
+    _make_questionary_mocks(
+        monkeypatch,
+        answers=[
+            "sk-ant-testkey",
+            "/workspace",
+            "/workspace/SOUL.md",
+            "claude-haiku-4-5-20251001",
+            "my-github-secret",
+            "owner/repo",
+        ],
+        checkbox_answer=["GitHub"],
+    )
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init"], catch_exceptions=False)
+    assert result.exit_code == 0
+    from dotenv import dotenv_values
+    env = dotenv_values(tmp_path / ".env")
+    assert "GATEWAY_WATCH__LANGSMITH__TOKEN" not in env
