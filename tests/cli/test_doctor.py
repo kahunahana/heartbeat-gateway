@@ -187,3 +187,28 @@ def test_api_key_present_but_wrong_prefix_still_fails(tmp_path, monkeypatch):
     result = runner.invoke(cli, ["doctor"], catch_exceptions=False)
     assert result.exit_code == 1
     assert "FAIL" in result.output
+
+
+def test_amplitude_signature_noop_warn(tmp_path, monkeypatch):
+    """AMPT-07: Doctor WARNs when require_signatures=True and amplitude.secret is set.
+
+    Amplitude does not sign webhook deliveries — the secret has no security effect.
+    Require all other secrets to be set so the doctor reaches the amplitude check.
+    """
+    soul = tmp_path / "SOUL.md"
+    soul.write_text("## Current Focus\nship it")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test-key")
+    monkeypatch.setenv("GATEWAY_WORKSPACE_PATH", str(tmp_path))
+    monkeypatch.setenv("GATEWAY_SOUL_MD_PATH", str(soul))
+    monkeypatch.setenv("GATEWAY_REQUIRE_SIGNATURES", "true")
+    monkeypatch.setenv("GATEWAY_WATCH__LINEAR__SECRET", "linear-secret")
+    monkeypatch.setenv("GATEWAY_WATCH__GITHUB__SECRET", "github-secret")
+    monkeypatch.setenv("GATEWAY_WATCH__POSTHOG__SECRET", "posthog-secret")
+    monkeypatch.setenv("GATEWAY_WATCH__AMPLITUDE__SECRET", "some-amplitude-secret")
+
+    runner = DoctorRunner(verbose=True)
+    results = runner.run()
+
+    amplitude_warn = [r for r in results if r.name == "Amplitude signature (no-op)"]
+    assert len(amplitude_warn) == 1, f"Expected 1 amplitude WARN result, got: {[r.name for r in results]}"
+    assert amplitude_warn[0].status == CheckStatus.WARN

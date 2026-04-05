@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from heartbeat_gateway.app import MAX_BODY_BYTES, create_app
 from heartbeat_gateway.config.schema import (
+    AmplitudeWatchConfig,
     BraintrustWatchConfig,
     GatewayConfig,
     GitHubWatchConfig,
@@ -19,11 +20,17 @@ from heartbeat_gateway.config.schema import (
 )
 
 
-def make_gateway_config(tmp_path: Path, braintrust_secret: str = "", langsmith_token: str = "") -> GatewayConfig:
+def make_gateway_config(
+    tmp_path: Path,
+    braintrust_secret: str = "",
+    langsmith_token: str = "",
+    amplitude_secret: str = "",
+) -> GatewayConfig:
     """Factory helper for tests that need a GatewayConfig with optional adapter credentials."""
     return GatewayConfig(
         workspace_path=tmp_path,
         watch=WatchConfig(
+            amplitude=AmplitudeWatchConfig(secret=amplitude_secret),
             braintrust=BraintrustWatchConfig(secret=braintrust_secret),
             langsmith=LangSmithWatchConfig(token=langsmith_token),
         ),
@@ -232,3 +239,51 @@ class TestLangSmithWebhookRoute:
         resp = client.post("/webhook/langsmith")
         assert resp.status_code == 308
         assert resp.headers["location"] == "/webhooks/langsmith"
+
+
+class TestAmplitudeWebhookRoute:
+    """AMPT-06: /webhooks/amplitude route integration tests."""
+
+    MONITOR_ALERT_PAYLOAD = {
+        "event_type": "monitor_alert",
+        "charts": [
+            {
+                "header": "DAU Monitor - 2025-05-12",
+                "body": "Current value: 850. Threshold: 1000.",
+                "url": "https://analytics.amplitude.com/org/chart/abc123",
+            }
+        ],
+        "what_happened": "DAU Monitor crossed threshold at 2025-05-12T11:00:00Z",
+    }
+
+    def test_amplitude_monitor_alert_returns_200(self, tmp_path: Path):
+        """AMPT-06a: POST with monitor_alert payload returns 200."""
+        client = TestClient(create_app(make_gateway_config(tmp_path)))
+        resp = client.post("/webhooks/amplitude", json=self.MONITOR_ALERT_PAYLOAD)
+        assert resp.status_code == 200
+        assert resp.json()["status"] in ("actionable", "ignored", "delta")
+
+    def test_amplitude_unknown_event_ignored(self, tmp_path: Path):
+        """AMPT-06b: POST with unrecognized event_type returns ignored."""
+        client = TestClient(create_app(make_gateway_config(tmp_path)))
+        resp = client.post("/webhooks/amplitude", json={"event_type": "something_else"})
+        assert resp.status_code == 200
+        assert "ignored" in resp.text
+
+    def test_amplitude_no_signature_always_passes(self, tmp_path: Path):
+        """AMPT-06c: Amplitude never returns 401 — verify_signature is a permanent passthrough."""
+        config = make_gateway_config(tmp_path, amplitude_secret="some-secret")
+        client = TestClient(create_app(config))
+        resp = client.post(
+            "/webhooks/amplitude",
+            content=_json.dumps({"event_type": "something_else"}).encode(),
+            headers={"content-type": "application/json", "x-amplitude-signature": "badsig"},
+        )
+        assert resp.status_code != 401
+
+    def test_amplitude_redirect_308(self, tmp_path: Path):
+        """AMPT-06d: POST /webhook/amplitude returns 308 redirect preserving POST method."""
+        client = TestClient(create_app(make_gateway_config(tmp_path)), follow_redirects=False)
+        resp = client.post("/webhook/amplitude")
+        assert resp.status_code == 308
+        assert resp.headers["location"] == "/webhooks/amplitude"
