@@ -57,7 +57,7 @@
 - [x] **LSMT-04**: Normalizes alert threshold events — metric name, current/threshold values → ACTIONABLE
 - [x] **LSMT-05**: Returns `None` for `run.completed` events with no errors (high-volume noise; always drop)
 - [ ] **LSMT-06**: `/webhooks/langsmith` route wired in `app.py`; `LangSmithAdapter` registered; pre-filter integration
-- [ ] **LSMT-07**: `gateway init` includes LangSmith section — token prompt + webhook URL instructions
+- [x] **LSMT-07**: `gateway init` includes LangSmith section — token prompt + webhook URL instructions
 - [x] **LSMT-08**: Unit tests (verify token, run error→normalize, feedback→normalize, alert→normalize, clean run→None) + fixture JSON + `docs/adapters.md` updated (notes dataset webhooks as unavailable)
 
 ## v2 Requirements (Deferred)
@@ -108,7 +108,7 @@
 | LSMT-04 | Phase 5 | Complete |
 | LSMT-05 | Phase 5 | Complete |
 | LSMT-06 | Phase 5 | Pending |
-| LSMT-07 | Phase 5 | Pending |
+| LSMT-07 | Phase 5 | Complete |
 | LSMT-08 | Phase 5 | Complete |
 | AMP-01 | Phase 6 | Pending |
 | AMP-02 | Phase 6 | Pending |
