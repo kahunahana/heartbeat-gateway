@@ -221,6 +221,47 @@ Braintrust: [my-project] environment_update in 'production'
 
 ---
 
+## LangSmith
+
+**Webhook URL:** `https://your-gateway.example.com/webhooks/langsmith`
+
+**Purpose:** Run error alerts, negative feedback, and alert threshold crossings from LangSmith/LangGraph.
+
+### Authentication
+
+Token-based — operator configures `X-Langsmith-Secret: <token>` as a custom header in LangSmith's webhook config UI. The gateway compares this header value to `GATEWAY_WATCH__LANGSMITH__TOKEN`. If no token is configured, all requests are accepted.
+
+### Setup in LangSmith
+
+1. Navigate to LangSmith: Settings → Webhooks → **Add Webhook**
+2. Set URL to `<your-gateway>/webhooks/langsmith`
+3. Click Headers and add: `X-Langsmith-Secret: <your-token>`
+4. The token must match `GATEWAY_WATCH__LANGSMITH__TOKEN` in your `.env`
+
+### Events Handled
+
+| `event_type`        | Trigger                                                                    | Classification |
+|---------------------|----------------------------------------------------------------------------|----------------|
+| `run.error`         | LangGraph agent run completes with an error                                | ACTIONABLE     |
+| `feedback`          | Automation rule matches runs with negative feedback scores                 | ACTIONABLE     |
+| `alert.threshold`   | Alert rule metric crosses threshold                                        | ACTIONABLE     |
+
+### Suppressed Events
+
+`run.completed` with no error is **always dropped** (high-volume noise — LSMT-05). These are suppressed before any LLM classification.
+
+### Config
+
+```env
+GATEWAY_WATCH__LANGSMITH__TOKEN=your-api-token
+```
+
+### Limitations
+
+LangSmith dataset change webhooks are not available in the LangSmith API as of 2026-04-01. Feedback events use aggregated `feedback_stats` from automation/rules webhooks — individual feedback comments are not available in this webhook type.
+
+---
+
 ## Adding a New Adapter
 
 Each adapter requires changes to 5 files. Work in this order:
