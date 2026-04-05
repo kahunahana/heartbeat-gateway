@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-02-PLAN.md — Amplitude route wired, doctor WARN added, 5 integration tests, 220 total passing
-last_updated: "2026-04-04T00:15:00Z"
+stopped_at: Completed 06-03-PLAN.md tasks 1-2 (Tasks 1-2 auto; Task 3 smoke test checkpoint pending human verify)
+last_updated: "2026-04-05T11:03:45.686Z"
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 15
-  completed_plans: 14
+  completed_plans: 15
 ---
 
 # STATE.md — heartbeat-gateway
@@ -18,14 +18,14 @@ progress:
 
 **What:** heartbeat-gateway v0.4.0 — Amplitude, Braintrust, and LangSmith webhook adapters + PostHog init wizard section
 **Core Value:** Operators running AI agent stacks can classify signals from LLM eval, observability, and analytics platforms alongside Linear and GitHub — within the existing five-stage pipeline, zero structural changes.
-**Current Focus:** Phase 6 in progress — 06-01 (AmplitudeAdapter + tests) complete; route wiring (06-02) and wizard (06-03) pending
+**Current Focus:** Phase 6 in progress — 06-01 and 06-02 complete; 06-03 tasks 1-2 done, smoke test checkpoint awaiting human verify
 
 ## Current Position
 
 - **Milestone:** v0.4.0 — Adapter Expansion
 - **Phase:** Phase 6 — Amplitude Adapter (in progress)
-- **Plan:** 06-02 complete (route wired, doctor WARN, 5 integration tests; 220 tests total)
-- **Status:** In progress
+- **Plan:** 06-03 tasks 1-2 complete (init wizard, docs; 223 tests total); Task 3 smoke test awaiting human verify
+- **Status:** In progress — checkpoint
 
 ## Progress
 
@@ -39,6 +39,8 @@ Phase 6: Amplitude Adapter                   ░ In progress (Plans 01-02 done, 
 
 ## Recent Decisions
 
+- Amplitude checkbox placed after LangSmith, before Linear in init wizard — consistent with adapter build order convention (06-03)
+- No-signing warning displayed inline before Amplitude secret prompt — matches passthrough adapter pattern; questionary.password used for consistency (06-03)
 - Amplitude route wired alphabetically after LangSmith; excluded from require_signatures enforcement; doctor WARN fires when require_signatures=true + amplitude secret set (06-02)
 - make_gateway_config test helper extended with amplitude_secret kwarg — follows braintrust_secret / langsmith_token pattern (06-02)
 - Amplitude verify_signature is permanent passthrough — Amplitude confirmed no webhook signing; docstring advises IP allowlisting (06-01)
@@ -71,9 +73,9 @@ Phase 6: Amplitude Adapter                   ░ In progress (Plans 01-02 done, 
 
 ## Pending Todos
 
-- Execute Phase 6 Plan 03 (init wizard for Amplitude)
+- Human verify smoke test for 06-03 (Task 3 checkpoint)
 
 ## Session Continuity
 
-Last session: 2026-04-04T00:15:00Z
-Stopped at: Completed 06-02-PLAN.md — Amplitude route wired, doctor WARN added, 5 integration tests, 220 total passing
+Last session: 2026-04-05T11:03:45.683Z
+Stopped at: Completed 06-03-PLAN.md tasks 1-2 (Tasks 1-2 auto; Task 3 smoke test checkpoint pending human verify)

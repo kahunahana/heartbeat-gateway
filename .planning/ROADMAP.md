@@ -10,7 +10,7 @@
 - [x] **Phase 3: Schema Foundation + PostHog Wizard** - Add three new WatchConfig models and PostHog init wizard section; prerequisite for all adapter phases (completed 2026-04-02)
 - [x] **Phase 4: Braintrust Adapter** - HMAC-SHA256 verification, is_test suppression, logs + environment_update events (completed 2026-04-03)
 - [x] **Phase 5: LangSmith Adapter** - Custom header token auth, run errors + feedback + alert threshold events (completed 2026-04-05)
-- [ ] **Phase 6: Amplitude Adapter** - Permanent passthrough verify_signature, monitor_alert + chart.annotation events
+- [x] **Phase 6: Amplitude Adapter** - Permanent passthrough verify_signature, monitor_alert + chart.annotation events (completed 2026-04-05)
 
 ---
 
@@ -88,7 +88,7 @@ Plans:
 | 3. Schema Foundation + PostHog Wizard | 2/2 | Complete   | 2026-04-02 |
 | 4. Braintrust Adapter | 3/3 | Complete | 2026-04-03 |
 | 5. LangSmith Adapter | 3/3 | Complete   | 2026-04-05 |
-| 6. Amplitude Adapter | 2/3 | In Progress|  |
+| 6. Amplitude Adapter | 3/3 | Complete   | 2026-04-05 |
 
 ---
 
