@@ -177,6 +177,55 @@ PostHog: feature flag 'new-checkout' called
 
 ---
 
+## Amplitude
+
+**Webhook URL:** `https://your-gateway.example.com/webhooks/amplitude`
+
+**Purpose:** Monitor alert notifications and chart annotation events from Amplitude.
+
+### Authentication
+
+Amplitude does not sign webhook deliveries. `verify_signature()` always returns `True`. There is no HMAC or token mechanism available.
+
+**Mitigation:** Restrict `/webhooks/amplitude` to Amplitude IP ranges using firewall rules or an API gateway (IP allowlisting). The `GATEWAY_WATCH__AMPLITUDE__SECRET` env var exists for config symmetry and future compatibility only — it has no security effect at runtime.
+
+### Setup in Amplitude
+
+1. Navigate to: Analytics → Monitors → **New Monitor**
+2. Configure the metric threshold and alert conditions
+3. Set the webhook URL to `<your-gateway>/webhooks/amplitude`
+4. The endpoint accepts all POSTs — no secret header is required or verified
+
+### Events Handled
+
+| Event | Classification | Description |
+|-------|---------------|-------------|
+| `monitor_alert` | ACTIONABLE candidate | Metric crossed a configured threshold |
+| `chart.annotation` | DELTA candidate | Annotation added to a chart |
+
+### Config
+
+```env
+GATEWAY_WATCH__AMPLITUDE__SECRET=your-future-secret
+```
+
+Note: The `GATEWAY_WATCH__AMPLITUDE__SECRET` env var exists for config symmetry but has no security effect. Amplitude does not currently sign webhook deliveries.
+
+### Condensed Summary Examples
+
+```
+Amplitude: monitor_alert 'DAU drop below 500' — Test
+Amplitude: chart.annotation on chart
+```
+
+### Limitations
+
+- Amplitude webhook documentation is limited — payload structure may vary across Amplitude plan tiers
+- `chart.annotation` payload structure may vary; the adapter handles known fields gracefully and returns `None` for unrecognized shapes
+- No signature verification is possible; IP allowlisting is the only available mitigation
+
+---
+
 ## Braintrust
 
 **Webhook URL:** `https://your-gateway.example.com/webhooks/braintrust`
