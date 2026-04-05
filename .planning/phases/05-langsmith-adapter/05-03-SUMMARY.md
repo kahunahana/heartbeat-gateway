@@ -38,7 +38,7 @@ requirements-completed: [LSMT-07]
 
 # Metrics
 duration: 15min
-completed: 2026-04-04
+completed: 2026-04-05
 ---
 
 # Phase 5 Plan 03: LangSmith Init Wizard Summary
@@ -50,7 +50,7 @@ completed: 2026-04-04
 - **Duration:** ~15 min
 - **Started:** 2026-04-04T22:00:00Z
 - **Completed:** 2026-04-04T22:15:00Z
-- **Tasks:** 2 of 3 complete (Task 3 is checkpoint:human-verify, pending smoke test)
+- **Tasks:** 3 of 3 complete (Task 3 smoke test approved by user)
 - **Files modified:** 3
 
 ## Accomplishments
@@ -98,13 +98,13 @@ None — no external service configuration required beyond what the wizard handl
 
 ## Next Phase Readiness
 
-- Task 3 (smoke test checkpoint) pending manual verification: run `uv run gateway init`, select LangSmith, confirm instructions and .env output
-- After smoke test approval, Phase 5 is fully complete (05-01 adapter, 05-02 route wiring, 05-03 wizard)
+- Task 3 smoke test approved: user ran `uv run heartbeat-gateway init`, selected LangSmith only, confirmed wizard displayed "LangSmith webhook setup", "Settings → Webhooks → Add Webhook", "X-Langsmith-Secret: <your-token>", and token prompt with "leave blank to skip". Gateway doctor showed 8 passed, 2 warned (Linear/GitHub secrets not set — expected).
+- Phase 5 is fully complete (05-01 adapter, 05-02 route wiring, 05-03 wizard)
 - Phase 6 (Amplitude Adapter) ready to begin
 
 ---
 *Phase: 05-langsmith-adapter*
-*Completed: 2026-04-04*
+*Completed: 2026-04-05*
 
 ## Self-Check: PASSED
 

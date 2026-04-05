@@ -59,9 +59,9 @@ Plans:
   6. `gateway init` prompts for LangSmith token with webhook URL and `X-Langsmith-Secret` header configuration instructions displayed inline
 **Plans**: 3 plans
 Plans:
-- [ ] 05-01-PLAN.md — Test fixtures + stubs, LangSmithAdapter implementation (token auth, multi-shape normalize, clean-run suppression)
-- [ ] 05-02-PLAN.md — Route registration in app.py, NormalizedEvent Literal update, integration tests
-- [ ] 05-03-PLAN.md — gateway init LangSmith section + wizard tests + docs/adapters.md + smoke test
+- [x] 05-01-PLAN.md — Test fixtures + stubs, LangSmithAdapter implementation (token auth, multi-shape normalize, clean-run suppression)
+- [x] 05-02-PLAN.md — Route registration in app.py, NormalizedEvent Literal update, integration tests
+- [x] 05-03-PLAN.md — gateway init LangSmith section + wizard tests + docs/adapters.md + smoke test
 
 ### Phase 6: Amplitude Adapter
 **Goal**: An Amplitude monitor alert webhook arrives at `/webhooks/amplitude`, is accepted without signature verification (Amplitude sends none), and produces a classified ACTIONABLE entry — while chart annotation events produce DELTA entries and unrecognized events are dropped cleanly.
@@ -103,14 +103,14 @@ Plans:
 | BTST-05 | Phase 4 | Complete (04-02) |
 | BTST-06 | Phase 4 | Complete (04-03) |
 | BTST-07 | Phase 4 | Complete (04-01) |
-| LSMT-01 | Phase 5 | Pending |
-| LSMT-02 | Phase 5 | Pending |
-| LSMT-03 | Phase 5 | Pending |
-| LSMT-04 | Phase 5 | Pending |
-| LSMT-05 | Phase 5 | Pending |
-| LSMT-06 | Phase 5 | Pending |
-| LSMT-07 | Phase 5 | Pending |
-| LSMT-08 | Phase 5 | Pending |
+| LSMT-01 | Phase 5 | Complete (05-01) |
+| LSMT-02 | Phase 5 | Complete (05-01) |
+| LSMT-03 | Phase 5 | Complete (05-01) |
+| LSMT-04 | Phase 5 | Complete (05-01) |
+| LSMT-05 | Phase 5 | Complete (05-01) |
+| LSMT-06 | Phase 5 | Complete (05-02) |
+| LSMT-07 | Phase 5 | Complete (05-03) |
+| LSMT-08 | Phase 5 | Complete (05-01) |
 | AMP-01 | Phase 6 | Pending |
 | AMP-02 | Phase 6 | Pending |
 | AMP-03 | Phase 6 | Pending |
