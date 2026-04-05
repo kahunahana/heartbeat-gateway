@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: milestone
-status: complete
-stopped_at: "Completed 05-03-PLAN.md — all tasks including smoke test approved; Phase 5 fully complete"
-last_updated: "2026-04-05T00:00:00.000Z"
+status: planning
+stopped_at: Completed 05-03-PLAN.md — all 3 tasks complete including smoke test approved; Phase 5 fully complete
+last_updated: "2026-04-05T09:12:53.533Z"
 progress:
   total_phases: 6
   completed_phases: 5
@@ -25,7 +25,7 @@ progress:
 - **Milestone:** v0.4.0 — Adapter Expansion
 - **Phase:** Phase 5 — LangSmith Adapter (complete, smoke test approved 2026-04-05)
 - **Plan:** 05-01, 05-02, 05-03 all tasks complete including Task 3 smoke test
-- **Status:** Complete — Phase 6 (Amplitude Adapter) next
+- **Status:** Ready to plan
 
 ## Progress
 
