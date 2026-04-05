@@ -83,7 +83,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 3. Schema Foundation + PostHog Wizard | 2/2 | Complete   | 2026-04-02 |
 | 4. Braintrust Adapter | 3/3 | Complete | 2026-04-03 |
-| 5. LangSmith Adapter | 0/3 | Planning complete | - |
+| 5. LangSmith Adapter | 1/3 | In Progress|  |
 | 6. Amplitude Adapter | 0/? | Not started | - |
 
 ---
