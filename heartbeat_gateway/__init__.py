@@ -5,7 +5,7 @@ from typing import Literal
 
 @dataclass
 class NormalizedEvent:
-    source: Literal["linear", "github", "posthog", "braintrust", "langsmith"]
+    source: Literal["linear", "github", "posthog", "braintrust", "langsmith", "amplitude"]
     event_type: str
     payload_condensed: str
     raw_payload: dict
