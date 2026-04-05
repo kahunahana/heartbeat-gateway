@@ -35,7 +35,7 @@
 - [x] **AMP-02**: Normalizes `monitor_alert` events — metric name, current value, threshold value → ACTIONABLE candidate
 - [x] **AMP-03**: Normalizes `chart.annotation` events — annotation text, chart name → DELTA candidate
 - [x] **AMP-04**: Returns `None` for unrecognized event types
-- [ ] **AMP-05**: `/webhooks/amplitude` route wired in `app.py`; `AmplitudeAdapter` registered in app state; pre-filter integration
+- [x] **AMP-05**: `/webhooks/amplitude` route wired in `app.py`; `AmplitudeAdapter` registered in app state; pre-filter integration
 - [ ] **AMP-06**: `gateway init` includes Amplitude section — secret prompt with no-signing warning displayed inline
 - [x] **AMP-07**: Unit tests (verify passthrough, normalize monitor_alert, normalize annotation, normalize unknown→None) + fixture JSON in `tests/fixtures/` + `docs/adapters.md` updated
 
@@ -114,7 +114,7 @@
 | AMP-02 | Phase 6 | Complete |
 | AMP-03 | Phase 6 | Complete |
 | AMP-04 | Phase 6 | Complete |
-| AMP-05 | Phase 6 | Pending |
+| AMP-05 | Phase 6 | Complete |
 | AMP-06 | Phase 6 | Pending |
 | AMP-07 | Phase 6 | Complete |
 

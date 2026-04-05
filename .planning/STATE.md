@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: milestone
-status: planning
-stopped_at: Completed 06-01-PLAN.md — AmplitudeAdapter implemented with 9 tests passing; NormalizedEvent Literal updated; ruff clean
-last_updated: "2026-04-05T10:46:03Z"
+status: executing
+stopped_at: Completed 06-02-PLAN.md — Amplitude route wired, doctor WARN added, 5 integration tests, 220 total passing
+last_updated: "2026-04-04T00:15:00Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 15
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # STATE.md — heartbeat-gateway
@@ -24,21 +24,23 @@ progress:
 
 - **Milestone:** v0.4.0 — Adapter Expansion
 - **Phase:** Phase 6 — Amplitude Adapter (in progress)
-- **Plan:** 06-01 complete (AmplitudeAdapter implemented, 9 tests passing)
+- **Plan:** 06-02 complete (route wired, doctor WARN, 5 integration tests; 220 tests total)
 - **Status:** In progress
 
 ## Progress
 
 ```
-[█████████░] 87% — Phase 6 in progress (13/15 plans done)
+[█████████░] 93% — Phase 6 in progress (14/15 plans done)
 Phase 3: Schema Foundation + PostHog Wizard  ✓ Complete (Plans 01-02 done)
 Phase 4: Braintrust Adapter                  ✓ Complete (Plans 01-03 done, 2026-04-03)
 Phase 5: LangSmith Adapter                   ✓ Complete (Plans 01-03 done, smoke test approved 2026-04-05)
-Phase 6: Amplitude Adapter                   ░ In progress (Plan 01 done, 02-03 pending)
+Phase 6: Amplitude Adapter                   ░ In progress (Plans 01-02 done, 03 pending)
 ```
 
 ## Recent Decisions
 
+- Amplitude route wired alphabetically after LangSmith; excluded from require_signatures enforcement; doctor WARN fires when require_signatures=true + amplitude secret set (06-02)
+- make_gateway_config test helper extended with amplitude_secret kwarg — follows braintrust_secret / langsmith_token pattern (06-02)
 - Amplitude verify_signature is permanent passthrough — Amplitude confirmed no webhook signing; docstring advises IP allowlisting (06-01)
 - condense() uses charts[0].header not what_happened — what_happened embeds timestamp, breaking dedup determinism across redeliveries (06-01)
 - Empty charts guard (if not charts: return None) prevents IndexError on monitor_alert with empty array (06-01)
@@ -69,9 +71,9 @@ Phase 6: Amplitude Adapter                   ░ In progress (Plan 01 done, 02-0
 
 ## Pending Todos
 
-- Execute Phase 6 Plans 02 and 03 (route wiring + init wizard for Amplitude)
+- Execute Phase 6 Plan 03 (init wizard for Amplitude)
 
 ## Session Continuity
 
-Last session: 2026-04-05T10:46:03Z
-Stopped at: Completed 06-01-PLAN.md — AmplitudeAdapter implemented with 9 tests passing; NormalizedEvent Literal updated; ruff clean
+Last session: 2026-04-04T00:15:00Z
+Stopped at: Completed 06-02-PLAN.md — Amplitude route wired, doctor WARN added, 5 integration tests, 220 total passing
