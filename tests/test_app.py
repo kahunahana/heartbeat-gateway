@@ -12,17 +12,23 @@ from heartbeat_gateway.config.schema import (
     BraintrustWatchConfig,
     GatewayConfig,
     GitHubWatchConfig,
+    LangSmithWatchConfig,
     LinearWatchConfig,
     PostHogWatchConfig,
     WatchConfig,
 )
 
 
-def make_gateway_config(tmp_path: Path, braintrust_secret: str = "") -> GatewayConfig:
-    """Factory helper for tests that need a GatewayConfig with optional braintrust_secret."""
+def make_gateway_config(
+    tmp_path: Path, braintrust_secret: str = "", langsmith_token: str = ""
+) -> GatewayConfig:
+    """Factory helper for tests that need a GatewayConfig with optional adapter credentials."""
     return GatewayConfig(
         workspace_path=tmp_path,
-        watch=WatchConfig(braintrust=BraintrustWatchConfig(secret=braintrust_secret)),
+        watch=WatchConfig(
+            braintrust=BraintrustWatchConfig(secret=braintrust_secret),
+            langsmith=LangSmithWatchConfig(token=langsmith_token),
+        ),
     )
 
 
@@ -179,3 +185,54 @@ class TestBraintrustWebhookRoute:
         resp = client.post("/webhook/braintrust")
         assert resp.status_code == 308
         assert resp.headers["location"] == "/webhooks/braintrust"
+
+
+class TestLangSmithWebhookRoute:
+    """LSMT-06: /webhooks/langsmith route integration tests."""
+
+    CLEAN_RUN_PAYLOAD = {
+        "run_id": "uuid-001",
+        "thread_id": "session-001",
+        "assistant_id": "agent",
+        "status": "success",
+        "kwargs": {"run_type": "chain", "name": "test-chain", "session_name": "test"},
+        "error": None,
+    }
+
+    RUN_ERROR_PAYLOAD = {
+        "run_id": "uuid-002",
+        "thread_id": "session-001",
+        "assistant_id": "agent",
+        "status": "error",
+        "kwargs": {"run_type": "chain", "name": "test-chain", "session_name": "test"},
+        "error": {"error": "TestError", "message": "Something failed"},
+    }
+
+    def test_clean_run_returns_ignored(self, tmp_path: Path):
+        client = TestClient(create_app(make_gateway_config(tmp_path)))
+        resp = client.post("/webhooks/langsmith", json=self.CLEAN_RUN_PAYLOAD)
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "ignored"
+
+    def test_wrong_token_returns_401(self, tmp_path: Path):
+        config = make_gateway_config(tmp_path, langsmith_token="real-token")
+        client = TestClient(create_app(config))
+        resp = client.post(
+            "/webhooks/langsmith",
+            content=_json.dumps(self.RUN_ERROR_PAYLOAD).encode(),
+            headers={"content-type": "application/json", "x-langsmith-secret": "wrong"},
+        )
+        assert resp.status_code == 401
+
+    def test_no_token_always_passes(self, tmp_path: Path):
+        client = TestClient(create_app(make_gateway_config(tmp_path)))
+        resp = client.post("/webhooks/langsmith", json=self.CLEAN_RUN_PAYLOAD)
+        assert resp.status_code == 200
+
+    def test_singular_redirect(self, tmp_path: Path):
+        client = TestClient(
+            create_app(make_gateway_config(tmp_path)), follow_redirects=False
+        )
+        resp = client.post("/webhook/langsmith")
+        assert resp.status_code == 308
+        assert resp.headers["location"] == "/webhooks/langsmith"
