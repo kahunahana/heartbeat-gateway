@@ -1,0 +1,10 @@
+{
+  "event_type": "chart.annotation",
+  "annotation": {
+    "label": "Deploy v2.3.0",
+    "description": "Production deployment"
+  },
+  "chart": {
+    "name": "Daily Active Users"
+  }
+}

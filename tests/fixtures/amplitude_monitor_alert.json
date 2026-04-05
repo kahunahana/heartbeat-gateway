@@ -1,0 +1,11 @@
+{
+  "event_type": "monitor_alert",
+  "charts": [
+    {
+      "header": "DAU Monitor - 2025-05-12",
+      "body": "Current value: 850. Threshold: 1000.",
+      "url": "https://analytics.amplitude.com/org/chart/abc123"
+    }
+  ],
+  "what_happened": "DAU Monitor crossed threshold at 2025-05-12T11:00:00Z"
+}
