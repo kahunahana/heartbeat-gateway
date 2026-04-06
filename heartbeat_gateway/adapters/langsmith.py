@@ -59,7 +59,7 @@ class LangSmithAdapter(WebhookAdapter):
                 "run_type": kwargs.get("run_type", ""),
             }
             return NormalizedEvent(
-                source="langsmith",  # type: ignore[arg-type]  # Literal updated in Plan 02
+                source="langsmith",
                 event_type="run.error",
                 payload_condensed=self.condense(payload),
                 raw_payload=payload,
@@ -77,7 +77,7 @@ class LangSmithAdapter(WebhookAdapter):
                 "triggered_threshold": payload.get("triggered_threshold"),
             }
             return NormalizedEvent(
-                source="langsmith",  # type: ignore[arg-type]  # Literal updated in Plan 02
+                source="langsmith",
                 event_type="alert.threshold",
                 payload_condensed=self.condense(payload),
                 raw_payload=payload,
@@ -101,7 +101,7 @@ class LangSmithAdapter(WebhookAdapter):
                         "run_name": run_name,
                     }
                     return NormalizedEvent(
-                        source="langsmith",  # type: ignore[arg-type]  # Literal updated in Plan 02
+                        source="langsmith",
                         event_type="feedback",
                         payload_condensed=self.condense(payload),
                         raw_payload=payload,
