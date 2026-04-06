@@ -7,9 +7,9 @@ Agent context for working on this codebase. Read this before touching code.
 ## What This Project Does
 
 heartbeat-gateway is an event-driven webhook gateway that replaces cron polling for AI
-agent workloads. It receives webhooks from Linear, GitHub, and PostHog, classifies them
-against the operator's `SOUL.md`, and writes actionable items to `HEARTBEAT.md` — the
-task queue consumed by OpenClaw and VikingBot agents.
+agent workloads. It receives webhooks from Linear, GitHub, PostHog, Braintrust, LangSmith,
+and Amplitude, classifies them against the operator's `SOUL.md`, and writes actionable
+items to `HEARTBEAT.md` — the task queue consumed by OpenClaw and VikingBot agents.
 
 **The 20x cost story:** cron polling costs ~$86/month at 30-minute intervals; event-driven
 classification costs ~$4.50/month.
@@ -26,8 +26,8 @@ Webhook → Adapter → PreFilter → Classifier (LLM) → Writer
 
 Five stages, in order:
 
-1. **Adapter** — verifies HMAC signature, normalizes payload to `NormalizedEvent`,
-   condenses to a 240-char summary for the LLM
+1. **Adapter** — verifies signature (HMAC, token header, or passthrough), normalizes
+   payload to `NormalizedEvent`, condenses to a 240-char summary for the LLM
 2. **PreFilter** — repo/project/branch scoping with zero LLM calls; always-drop list
 3. **Classifier** — LiteLLM reads SOUL.md (first 500 chars) + active HEARTBEAT.md tasks;
    returns `ACTIONABLE`, `DELTA`, or `IGNORE`
@@ -79,8 +79,8 @@ These are documented; do not "fix" them in the wrong layer.
 
 | Gap | Status | Notes |
 |-----|--------|-------|
-| PG-1: No onboarding wizard | Future phase | `gateway init` CLI |
-| PG-2: No `gateway doctor` command | Future phase | Pre-flight config validator |
+| PG-1: No onboarding wizard | **Fixed in v0.3.0** | `gateway init` CLI wizard |
+| PG-2: No `gateway doctor` command | **Fixed in v0.3.0** | Pre-flight config validator |
 | PG-3: SOUL.md has no schema | Future phase | Linter/template to prevent scope-creep |
 | PG-4: `condense()` uses team name not project name | **Fixed in v0.2.0** | commit `e84290a` |
 | PG-5: MCP stdio transport unreliable over SSH | Future phase | See below |
@@ -106,14 +106,12 @@ the shell/SSH layer, not the SSH connection itself.
 ### Running the test suite
 
 ```bash
-uv run pytest          # 133 passed, 1 xfailed (134 total)
+uv run pytest          # 236 passed, 1 xfailed (237 total)
 uv run ruff check .    # lint
 uv run ruff format .   # format
 ```
 
 **The xfailed test is intentional.** It demonstrates a race condition. Do not fix it.
-
-CONTRIBUTING.md says "94 tests" — that is out of date. Current count: 134.
 
 ### Before opening a PR
 
@@ -148,6 +146,10 @@ GATEWAY_WATCH__LINEAR__SECRET=...
 GATEWAY_WATCH__LINEAR__PROJECT_IDS=["uuid-here"]
 GATEWAY_WATCH__GITHUB__SECRET=...
 GATEWAY_WATCH__GITHUB__REPOS=["owner/repo"]
+GATEWAY_WATCH__POSTHOG__SECRET=...
+GATEWAY_WATCH__BRAINTRUST__SECRET=...
+GATEWAY_WATCH__LANGSMITH__TOKEN=...
+GATEWAY_WATCH__AMPLITUDE__SECRET=...   # stored for symmetry — Amplitude has no signing
 ```
 
 Startup log confirms which values loaded — check `journalctl -u heartbeat-gateway` for
@@ -162,7 +164,7 @@ Startup log confirms which values loaded — check `journalctl -u heartbeat-gate
 | Host | `root@<your-vps-ip>` |
 | Service | `systemctl status heartbeat-gateway` |
 | Public endpoint | `https://hooks.kahako.ai` (Cloudflare tunnel, survives reboots) |
-| Health check | `curl http://localhost:8080/health` → `{"status":"ok","version":"0.2.0"}` |
+| Health check | `curl http://localhost:8080/health` → `{"status":"ok","version":"0.4.0"}` |
 | Audit log | `tail -f /root/.openclaw/workspace/audit.log` |
 | HEARTBEAT.md | `/root/.openclaw/workspace/HEARTBEAT.md` |
 | SOUL.md | `/root/workspace/SOUL.md` |
@@ -179,7 +181,14 @@ Startup log confirms which values loaded — check `journalctl -u heartbeat-gate
 | `heartbeat_gateway/pre_filter.py` | Scoping — drops events before LLM |
 | `heartbeat_gateway/classifier.py` | LLM classification, SOUL.md context |
 | `heartbeat_gateway/writer.py` | HEARTBEAT.md writer, dedup logic |
-| `heartbeat_gateway/adapters/linear.py` | Linear adapter |
+| `heartbeat_gateway/adapters/linear.py` | Linear adapter (HMAC-SHA256) |
+| `heartbeat_gateway/adapters/github.py` | GitHub adapter (HMAC-SHA256) |
+| `heartbeat_gateway/adapters/posthog.py` | PostHog adapter (HMAC-SHA256) |
+| `heartbeat_gateway/adapters/braintrust.py` | Braintrust adapter (passthrough — no signing) |
+| `heartbeat_gateway/adapters/langsmith.py` | LangSmith adapter (X-Langsmith-Secret token) |
+| `heartbeat_gateway/adapters/amplitude.py` | Amplitude adapter (passthrough — no signing) |
+| `heartbeat_gateway/commands/init.py` | `gateway init` wizard |
+| `heartbeat_gateway/commands/doctor.py` | `gateway doctor` pre-flight checks |
 | `heartbeat_gateway/mcp_server.py` | MCP server: `read_heartbeat`, `read_delta`, `get_gateway_status`, `read_soul` |
 | `heartbeat_gateway/config/schema.py` | GatewayConfig — BaseModel/BaseSettings constraint lives here |
 | `heartbeat_gateway/prompts/classify.yaml` | LLM prompt template |

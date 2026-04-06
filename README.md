@@ -1,22 +1,24 @@
 # heartbeat-gateway
 
-![Tests](https://img.shields.io/badge/tests-134%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-236%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 
 **Cron polling your project tools costs ~$86/month and keeps your agents 30 minutes behind. heartbeat-gateway costs ~$4.50/month and delivers events in under 2 seconds.**
 
-It classifies webhooks from **Linear**, **GitHub**, and **PostHog** against your operator's `SOUL.md` and writes actionable items to `HEARTBEAT.md` — the task queue consumed by [OpenClaw](https://github.com/kahunahana/openclaw), [VikingBot](https://github.com/kahunahana/vikingbot), and any agent that can read a markdown file.
+It classifies webhooks from **Linear**, **GitHub**, **PostHog**, **Braintrust**, **LangSmith**, and **Amplitude** against your operator's `SOUL.md` and writes actionable items to `HEARTBEAT.md` — the task queue consumed by [OpenClaw](https://github.com/kahunahana/openclaw), [VikingBot](https://github.com/kahunahana/vikingbot), and any agent that can read a markdown file.
 
 ```
-Linear ──┐
-GitHub ──┼──▶  /webhooks/{source}  ──▶  Adapter  ──▶  PreFilter  ──▶  Classifier (LLM)  ──▶  HEARTBEAT.md
-PostHog ─┘                                                                 ▲
-                                                                        SOUL.md
+Linear ─────┐
+GitHub ─────┤
+PostHog ────┤
+Braintrust ─┼──▶  /webhooks/{source}  ──▶  Adapter  ──▶  PreFilter  ──▶  Classifier (LLM)  ──▶  HEARTBEAT.md
+LangSmith ──┤                                                                    ▲
+Amplitude ──┘                                                                 SOUL.md
 ```
 
 Every incoming event is:
-1. **Verified** — HMAC signature checked per adapter
+1. **Verified** — signature checked per adapter (HMAC, token header, or passthrough)
 2. **Normalized** — condensed to a 240-char summary + structured metadata
 3. **Pre-filtered** — repo/project/branch scoping with zero LLM calls
 4. **Classified** — LLM reads SOUL.md context and returns `ACTIONABLE`, `DELTA`, or `IGNORE`
@@ -68,13 +70,16 @@ GATEWAY_SOUL_MD_PATH=/home/youruser/workspace/SOUL.md
 uv run uvicorn heartbeat_gateway.app:create_app --factory --host 0.0.0.0 --port 8080
 ```
 
-Point your Linear, GitHub, and PostHog webhooks at:
+Point your webhook providers at:
 
-| Source   | Local dev URL                              | Production URL (HTTPS required) |
-|----------|--------------------------------------------|---------------------------------|
-| Linear   | `http://localhost:8080/webhooks/linear`    | `https://your-host/webhooks/linear` |
-| GitHub   | `http://localhost:8080/webhooks/github`    | `https://your-host/webhooks/github` |
-| PostHog  | `http://localhost:8080/webhooks/posthog`   | `https://your-host/webhooks/posthog` |
+| Source     | Local dev URL                                | Production URL (HTTPS required) |
+|------------|----------------------------------------------|---------------------------------|
+| Linear     | `http://localhost:8080/webhooks/linear`      | `https://your-host/webhooks/linear` |
+| GitHub     | `http://localhost:8080/webhooks/github`      | `https://your-host/webhooks/github` |
+| PostHog    | `http://localhost:8080/webhooks/posthog`     | `https://your-host/webhooks/posthog` |
+| Braintrust | `http://localhost:8080/webhooks/braintrust`  | `https://your-host/webhooks/braintrust` |
+| LangSmith  | `http://localhost:8080/webhooks/langsmith`   | `https://your-host/webhooks/langsmith` |
+| Amplitude  | `http://localhost:8080/webhooks/amplitude`   | `https://your-host/webhooks/amplitude` |
 
 > **Note:** The path is `/webhooks/` (plural). Using `/webhook/` (singular) will redirect automatically, but configure your webhook provider with the correct plural path to avoid the extra round-trip.
 
@@ -95,7 +100,7 @@ Check health: `curl http://localhost:8080/health`
 │          ▼                                              │
 │  ┌───────────────┐   verify_signature()                 │
 │  │   Adapter     │   normalize() → NormalizedEvent      │
-│  │ Linear/GH/PH  │   condense() → 240-char summary      │
+│  │ 6 adapters    │   condense() → 240-char summary      │
 │  └───────┬───────┘                                      │
 │          │                                              │
 │          ▼                                              │
@@ -177,7 +182,7 @@ See [docs/mcp.md](docs/mcp.md) for setup and Claude Desktop config.
 ## Documentation
 
 - [Configuration reference](docs/configuration.md)
-- [Adapter setup (Linear, GitHub, PostHog)](docs/adapters.md)
+- [Adapter setup (Linear, GitHub, PostHog, Braintrust, LangSmith, Amplitude)](docs/adapters.md)
 - [Deploying (bare-metal, Docker, Railway)](docs/deploying.md)
 - [MCP server setup](docs/mcp.md)
 - [Deep-dive: architecture, cost breakdown, and hardening story](https://medium.com/@chadk/heartbeat-gateway) *(link active after publish)*
